@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
-import Chezz
-import sys
+from Chezz import *
+# import sys
 
 if __name__ == "__main__":
 
-    print("Hello World")
+    board = Board()
+    board.populate_board()
+
+    game = Chezz(board)
+    print(game)
