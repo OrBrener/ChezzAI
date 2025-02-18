@@ -120,3 +120,4 @@ output.txt
 *.docx
 # a3 executable
 a3 
+/.vscode
