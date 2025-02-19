@@ -121,3 +121,4 @@ output.txt
 # a3 executable
 a3 
 /.vscode
+board.*
