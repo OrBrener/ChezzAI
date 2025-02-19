@@ -5,8 +5,5 @@ from Chezz import *
 
 if __name__ == "__main__":
 
-    board = Board()
-    board.populate_board()
-
-    game = Chezz(board)
-    print(game)
+    game = Chezz()
+    print(game.valid_moves())
