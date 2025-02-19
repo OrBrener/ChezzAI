@@ -45,7 +45,7 @@ class Board():
             board_representation += " ".join(self.board[(i, j)] for i in range(8)) + "\n"
         return board_representation
     
-    def get_piece(self, pos):
+    def get_piece_at_position(self, pos):
         return self.board[Board.position_map[pos]]
 
     def get_piece_positions(self, piece_name):
