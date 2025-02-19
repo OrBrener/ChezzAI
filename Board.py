@@ -44,3 +44,11 @@ class Board():
         for j in range(7, -1, -1):  # Print from rank 8 to 1 (top to bottom)
             board_representation += " ".join(self.board[(i, j)] for i in range(8)) + "\n"
         return board_representation
+    
+    def get_piece(self, pos):
+        return self.board[Board.position_map[pos]]
+
+    def get_piece_positions(self, piece_name):
+        reverse_position_map = {v: k for k, v in Board.position_map.items()}  # Reverse the dictionary
+        positions = [reverse_position_map[square] for square, piece in self.board.items() if piece.strip() == piece_name]
+        return positions
