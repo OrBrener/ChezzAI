@@ -13,7 +13,17 @@ class Chezz:
             self.board.populate_board()
 
     def __str__( self ):
-        return str(self.board)
+        # return a string representation of the current state of the board and all the valid moves
+        return_str = str(self.board)
+        
+        return_str += "Moves: \n"
+        num_moves = 0
+        for move in self.valid_moves():
+            return_str += f"{num_moves+1}\t{move[0][1]}{move[2]}\n"
+            num_moves += 1
+        return_str += f"number of valid moves: {num_moves}"
+        
+        return return_str
     
     def valid_moves(self):
         def moves_flinger():
