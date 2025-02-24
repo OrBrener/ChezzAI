@@ -105,30 +105,49 @@ class Chezz:
             for file in files:
                 if pattern.match(file):  # Check if the file matches the pattern "board.xxx"
                     os.remove(file)
-                    print(f"Removed file: {file}")
-
-        # Generate all possible boards for each move
 
         moves = self.valid_moves()
         remove_old_board_files()
 
         board_counter = 0
         for move in moves:
-            print(move)
-            new_board = self.generate_board_after_move(move)  # Function to update the board state
+            new_board = self.generate_board_after_move(move)
             
             # Save the new board to a file
-            filename = f"board.{str(board_counter).zfill(3)}"  # Name format: board.000, board.001, etc.
+            filename = f"board.{str(board_counter).zfill(3)}"  # Name format: board.000, board.001, ...
             
-            with open(filename, 'w') as file:
-                file.write(new_board)  # Assuming generate_board_after_move returns a board string
+            # open the output file and write the valid board encoding after the move
+            with open(filename, 'w', encoding="utf-8") as file:
+                file.write(f"{new_board.colour} {new_board.i1} {new_board.i2} {new_board.i3}\n")
+                file.write("{\n")  # Open curly bracket
+
+                # Sort board positions in correct order and write them to file
+                piece_entries = []
+                for (x, y), piece in sorted(new_board.board.items(), key=lambda item: (-item[0][1], item[0][0])):  
+                    if piece.strip() != "-":
+                        piece_entries.append(f"  {new_board.convert_coordinates_to_position((x,y))}: '{piece.strip()}'")
+
+                # Join all entries with ",\n" and write them
+                file.write(",\n".join(piece_entries) + "\n")
+
+                file.write("}\n")  # Closing curly bracket
+
+                # Write the final three lines
+                file.write("0 0 0\n")
+
 
             board_counter += 1
     
     def generate_board_after_move(self, move):
-        # Logic to modify the board state after applying the move.
-        # This is a placeholder, and you will need to implement how the board changes based on the move.
-        # Return the updated board as a string.
+        # modify the board state after applying the move.
+
         new_board = copy.deepcopy(self.board)  # Deep copy to avoid modifying the original board
-        # Apply the move to the new_board here...
-        return str(str(new_board) + move)  # Convert the new board to string format for output
+        piece, pos, new_pos = move
+
+        new_board.switch_turn()
+        new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+        new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
+
+        # TODO: Implement contagion from zombie
+        
+        return new_board
