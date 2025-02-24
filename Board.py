@@ -23,6 +23,9 @@ class Board():
         self.i3 = '0'
     
     def populate_board(self):
+        # store board info from stdin board file input
+
+        # first line
         self.colour, self.i1, self.i2, self.i3 = sys.stdin.readline().split()
         
         # Read remaining board input (excluding last 3 lines, not including empty last line)
@@ -40,15 +43,40 @@ class Board():
 
 
     def __str__(self):
+        # return a string representation of the board 8x8 with row and col titles
         board_representation = ""
         for j in range(7, -1, -1):  # Print from rank 8 to 1 (top to bottom)
-            board_representation += " ".join(self.board[(i, j)] for i in range(8)) + "\n"
+            board_representation += str(j + 1) + "\t" + " ".join(self.board[(i, j)] for i in range(8)) + "\n"
+        board_representation += "\ta\t b\t c\t d\t e\t f\t g\t h\n"
         return board_representation
     
     def get_piece_at_position(self, pos):
+        # return the piece at the given board position
         return self.board[Board.position_map[pos]]
+    
+    def get_coordinates_at_position(self, pos):
+        # return the board coordinates at the given position
+        # ex: get_coordinates_at_position('a1') = (0,0)
+        return Board.position_map[pos]
+    
+    def convert_coordinates_to_position(self, cord):
+        # convert board coordinates into a board position
+        # return an empty string if the board if out of the bounds of the board
+        # ex: convert_coordinates_to_position((0,0)) = 'a1' convert_coordinates_to_position((-1,0)) = ''
+
+        x, y = cord
+        if x < 0 or y < 0 or x > 7 or y > 7: # out of range
+            return '' 
+        
+        reverse_position_map = {v: k for k, v in Board.position_map.items()} # Reverse the dictionary
+        return reverse_position_map[cord]
 
     def get_piece_positions(self, piece_name):
+        # return a list of board positions of the given piece
         reverse_position_map = {v: k for k, v in Board.position_map.items()}  # Reverse the dictionary
         positions = [reverse_position_map[square] for square, piece in self.board.items() if piece.strip() == piece_name]
         return positions
+    
+    def switch_turn(self):
+        # Switches the current turn colour
+        self.colour = 'b' if self.colour == 'w' else 'w'
