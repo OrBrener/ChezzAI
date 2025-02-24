@@ -121,4 +121,7 @@ output.txt
 # a3 executable
 a3 
 /.vscode
+# valid move board files (program output)
 board.*
+# folder for input files used for testing
+boards/
