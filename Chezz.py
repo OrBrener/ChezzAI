@@ -77,9 +77,11 @@ class Chezz:
             return moves
         
         def moves_queen():
-            moves = ["queen"]
-            
-            return moves
+            # Queen: Moves as both the bishop and the rook
+    
+            directions = [  (-1, 0), (1, 0), (0, -1), (0, 1),  # Rook moves
+                            (-1, -1), (-1, 1), (1, -1), (1, 1)]  # Bishop moves
+            return generate_moves('Q', directions)
         
         def moves_king():
             # King: Moves one step in any direction
@@ -104,7 +106,7 @@ class Chezz:
         # move_functions = [moves_flinger, moves_peon, moves_knight, moves_cannon, 
         #               moves_queen, moves_king, moves_zombie, moves_bishop, moves_rook]
 
-        move_functions = [moves_king, moves_bishop, moves_rook]
+        move_functions = [moves_king, moves_bishop, moves_rook, moves_queen]
         return list(chain.from_iterable(func() for func in move_functions))
     
     def generate_board_files(self):
