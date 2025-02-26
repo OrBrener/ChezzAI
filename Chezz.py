@@ -97,14 +97,14 @@ class Chezz:
             return generate_moves('B', directions)
         
         def moves_rook():
-            moves = ["rook"]
-            
-            return moves
+            # Rook: Moves in straight lines until blocked
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            return generate_moves('R', directions)
         
         # move_functions = [moves_flinger, moves_peon, moves_knight, moves_cannon, 
         #               moves_queen, moves_king, moves_zombie, moves_bishop, moves_rook]
 
-        move_functions = [moves_king, moves_bishop]
+        move_functions = [moves_king, moves_bishop, moves_rook]
         return list(chain.from_iterable(func() for func in move_functions))
     
     def generate_board_files(self):
