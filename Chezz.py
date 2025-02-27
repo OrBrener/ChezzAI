@@ -144,7 +144,7 @@ class Chezz:
 
                 # Sort board positions in correct order and write them to file
                 piece_entries = []
-                for (x, y), piece in sorted(new_board.board.items(), key=lambda item: (-item[0][1], item[0][0])):  
+                for (x, y), piece in new_board.board.items():  
                     if piece.strip() != "-":
                         piece_entries.append(f"  {new_board.convert_coordinates_to_position((x,y))}: '{piece.strip()}'")
 
@@ -170,5 +170,9 @@ class Chezz:
         new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
 
         # TODO: Implement contagion from zombie
+        # NOTE: contagion of x's zombies happens after the end of the x's turn.
+        # ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (as specified),
+        # those new w zombies will only keep infecting after the end of w's next turn
+        # the only exception is if a Peon get's promoted (to a zombie) (by moving to the end file or being flung), it will not infect at the end of that turn, only at the end of the next turn 
         
         return new_board
