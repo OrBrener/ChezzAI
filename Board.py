@@ -37,7 +37,10 @@ class Board():
             if len(parts) == 2:
                 square, piece = parts
                 square = square[:-1] # remove trailing ':'
-                piece = piece[:-2].strip("'") # remove quotations and trailing ','
+                piece = piece[:-1].strip("'") # remove quotations
+                # all the pieces except for the last one have a comma that needs to be removed
+                if len(piece) == 5:
+                    piece = piece[:-1].strip(",") # remove trailing ','
                 if square in Board.position_map:
                     self.board[Board.position_map[square]] = piece + '\t'  # Assign piece to board coordinate
 
