@@ -1,4 +1,5 @@
 from Board import *
+from Piece import *
 from itertools import chain
 import copy
 import os
@@ -26,92 +27,69 @@ class Chezz:
         return return_str
     
     def valid_moves(self):
-        
-        def generate_moves(piece_type, directions, single_step=False):
-            moves = []
-            
-            # Get all positions of the given piece type
-            for position in self.board.get_piece_positions(self.board.colour + piece_type):
-                x, y = self.board.get_coordinates_at_position(position)  # Convert chess notation to (row, col)
 
-                # Loop through each movement direction
-                for dx, dy in directions:
+        # Directionality for Peons
+        forward = 1 if self.board.colour == 'w' else -1  # White moves up, Black moves down
+
+        # Define pieces with their name, move_directions, capture_directions, single_step_movement, single_step_capture, special_abilities
+        # TODO: Reorder the pieces from most important to least so that the order of the moves is more efficient for A4
+        pieces = [
+            Piece('K', [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)], single_step_capture=True, single_step_movement=True),
+            Piece('B', [(-1, -1), (-1, 1), (1, -1), (1, 1)]),
+            Piece('R', [(-1, 0), (1, 0), (0, -1), (0, 1)]),
+            Piece('Q', [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]),
+            Piece('N', [(-2, -1), (-2, 1), (2, -1), (2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2)], single_step_capture=True, single_step_movement=True),
+            Piece('P', [(0, forward)], capture_directions=[(-1, forward), (1, forward)], single_step_capture=True, single_step_movement=True)
+        ]
+
+        def generate_moves(piece):
+            '''
+            Returns a list of moves (piece movement to an empty square, or a piece capture) 
+            for all of the instances of the given piece on the current board
+            '''
+            # TODO: Reorder the move appends to captures before simple movement so that the order of the moves is more efficient for A4
+            moves = []
+
+            # Get all positions of the given piece type
+            for position in self.board.get_piece_positions(self.board.colour + piece.name):
+                x, y = self.board.get_coordinates_at_position(position) # Convert chess notation to (row, col)
+                
+                # Loop through each movement and capture direction
+                for dx, dy in set(piece.move_directions + piece.capture_directions):  
                     new_x, new_y = x + dx, y + dy
-                    # convert coordinates to board position (ex: (0,0) = 'a1') 
+                    # Convert coordinates to board position (ex: (0,0) = 'a1')
                     new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
                     
-                    while new_pos:  # Ensure move is within board boundaries
-                        piece = self.board.get_piece_at_position(new_pos).strip()
+                    while new_pos: # Ensure move is within board boundaries
+                        piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
                         
-                        if piece == '-' or piece[0] != self.board.colour:  # Empty square or opponent's piece
-                            # format: (<piece to be moved>, <current piece position>, <new position after move>)
-                            moves.append((self.board.colour + piece_type, position, new_pos))
-                            
-                        if single_step or piece != '-':  # Stop if it's a capture or single-step piece (like a King)
+                        if piece_at_new_pos == '-':  # Empty square → Movement allowed
+                            if (dx, dy) in piece.move_directions:
+                                # Format: (<piece to be moved>, <current piece position>, <new position after move>)
+                                moves.append((self.board.colour + piece.name, position, new_pos))
+                        else: # There is a piece at the new position  
+                            # Opponent's piece for capture 
+                            if (dx, dy) in piece.capture_directions and piece_at_new_pos[0] != self.board.colour:
+                                moves.append((self.board.colour + piece.name, position, new_pos))  # Capture
+                            break # After capture, piece cannot move any further in that direction
+                        
+                        # Stop if it's a capture or single-step piece (like a King)
+                        # If the piece is a single step (only one move in each direction), 
+                        # Or if the current direction is a capture direction, and single_step_capture is True, 
+                        # It stops further movement in that direction.
+                        if piece.single_step_movement or ((dx, dy) in piece.capture_directions and piece.single_step_capture):
                             break  
 
+                        # Update the new coordinates and board position in the next direction if single_step_movement=False
                         new_x += dx
                         new_y += dy
                         new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
-
-            return moves
-        
-        def moves_flinger():
-            moves = ["flinger"]
-            
-            return moves
-            
-        def moves_peon():
-            moves = ["peon"]
-            
+   
             return moves
 
-        def moves_knight():
-            # Knight: Moves in an L-shape
-            directions = [
-                (-2, -1), (-2, 1), (2, -1), (2, 1),
-                (-1, -2), (-1, 2), (1, -2), (1, 2)
-            ]
+        # Return a concatenated list of all the moves for each piece on the board
+        return list(chain.from_iterable(generate_moves(piece) for piece in pieces))
 
-            return generate_moves('N', directions, True)
-        
-        def moves_cannon():
-            moves = ["cannon"]
-            
-            return moves
-        
-        def moves_queen():
-            # Queen: Moves as both the bishop and the rook
-    
-            directions = [  (-1, 0), (1, 0), (0, -1), (0, 1),  # Rook moves
-                            (-1, -1), (-1, 1), (1, -1), (1, 1)]  # Bishop moves
-            return generate_moves('Q', directions)
-        
-        def moves_king():
-            # King: Moves one step in any direction
-            directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-            return generate_moves('K', directions, single_step=True)
-        
-        def moves_zombie():
-            moves = ["zombie"]
-            
-            return moves
-        
-        def moves_bishop():
-            # Bishop: Moves diagonally until blocked
-            directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-            return generate_moves('B', directions)
-        
-        def moves_rook():
-            # Rook: Moves in straight lines until blocked
-            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-            return generate_moves('R', directions)
-        
-        # move_functions = [moves_flinger, moves_peon, moves_knight, moves_cannon, 
-        #               moves_queen, moves_king, moves_zombie, moves_bishop, moves_rook]
-
-        move_functions = [moves_king, moves_bishop, moves_rook, moves_queen, moves_knight]
-        return list(chain.from_iterable(func() for func in move_functions))
     
     def generate_board_files(self):
 
