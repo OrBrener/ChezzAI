@@ -1,5 +1,17 @@
 class Piece:
-    def __init__(self, name, move_directions, capture_directions=None, single_step_movement=False, single_step_capture=False, special_abilities=None):
+
+    Movements = {
+        "8-Square": [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)],
+        "Diagonals": [(-1, -1), (-1, 1), (1, -1), (1, 1)],
+        "Straight-Files": [(-1, 0), (1, 0), (0, -1), (0, 1)],
+        "L-Shape": [(-2, -1), (-2, 1), (2, -1), (2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2)],
+        "Up-1": [(0,1)],
+        "Down-1": [(0,-1)],
+        "Diagonal-Forward": [(-1, 1), (1, 1)],
+        "Diagonal-Backward": [(-1, -1), (1, -1)],
+    }
+
+    def __init__(self, name, move_directions, capture_directions=None, single_step_movement=False, single_step_capture=False):
         """
         Initializes a Piece object with the given attributes.
         Args:
@@ -8,7 +20,6 @@ class Piece:
             capture_directions (list, optional): A list of directions the piece can capture. Defaults to move_directions if not provided.
             single_step_movement (bool, optional): Indicates if the piece can only move one step at a time. Defaults to False.
             single_step_capture (bool, optional): Indicates if the piece can only capture one step at a time. Defaults to False.
-            special_abilities (list, optional): A list of special abilities the piece has. Defaults to an empty list.
         """
         
         self.name = name
@@ -16,7 +27,6 @@ class Piece:
         self.capture_directions = capture_directions if capture_directions else move_directions
         self.single_step_movement = single_step_movement
         self.single_step_capture = single_step_capture
-        self.special_abilities = special_abilities if special_abilities else []
 
     def __repr__(self):
         return f"Piece({self.name})"

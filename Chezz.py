@@ -29,17 +29,20 @@ class Chezz:
     def valid_moves(self):
 
         # Directionality for Peons
-        forward = 1 if self.board.colour == 'w' else -1  # White moves up, Black moves down
+        direction = ["Up","Forward"] if self.board.colour == 'w' else ["Down","Backward"]  # White moves up, Black moves down
 
         # Define pieces with their name, move_directions, capture_directions, single_step_movement, single_step_capture, special_abilities
         # TODO: Reorder the pieces from most important to least so that the order of the moves is more efficient for A4
         pieces = [
-            Piece('K', [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)], single_step_capture=True, single_step_movement=True),
-            Piece('B', [(-1, -1), (-1, 1), (1, -1), (1, 1)]),
-            Piece('R', [(-1, 0), (1, 0), (0, -1), (0, 1)]),
-            Piece('Q', [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]),
-            Piece('N', [(-2, -1), (-2, 1), (2, -1), (2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2)], single_step_capture=True, single_step_movement=True),
-            Piece('P', [(0, forward)], capture_directions=[(-1, forward), (1, forward)], single_step_capture=True, single_step_movement=True)
+            Piece('K', Piece.Movements["8-Square"], single_step_capture=True, single_step_movement=True),
+            Piece('B', Piece.Movements["Diagonals"]),
+            Piece('R', Piece.Movements["Straight-Files"]),
+            Piece('Q', Piece.Movements["8-Square"]),
+            Piece('N', Piece.Movements["L-Shape"], single_step_capture=True, single_step_movement=True),
+            Piece('P', Piece.Movements[f"{direction[0]}-1"], capture_directions=Piece.Movements[f"Diagonal-{direction[1]}"], single_step_capture=True, single_step_movement=True),
+            Piece('Z', Piece.Movements["Straight-Files"], single_step_capture=True, single_step_movement=True),
+            Piece('C', Piece.Movements["Straight-Files"], capture_directions=[], single_step_movement=True),
+            Piece('F', Piece.Movements["8-Square"], capture_directions=[], single_step_movement=True),
         ]
 
         def generate_moves(piece):
