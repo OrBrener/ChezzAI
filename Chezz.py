@@ -152,5 +152,6 @@ class Chezz:
         # ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (as specified),
         # those new w zombies will only keep infecting after the end of w's next turn
         # the only exception is if a Peon get's promoted (to a zombie) (by moving to the end file or being flung), it will not infect at the end of that turn, only at the end of the next turn 
+        # TODO: implement promotion of peon to zombie on last rank
         
         return new_board
