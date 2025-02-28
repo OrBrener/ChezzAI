@@ -31,7 +31,7 @@ class Chezz:
         # Directionality for Peons
         direction = ["Up","Forward"] if self.board.colour == 'w' else ["Down","Backward"]  # White moves up, Black moves down
 
-        # Define pieces with their name, move_directions, capture_directions, single_step_movement, single_step_capture, special_abilities
+        # Define pieces with their name, move_directions, capture_directions, single_step_movement, single_step_capture
         # TODO: Reorder the pieces from most important to least so that the order of the moves is more efficient for A4
         pieces = [
             Piece('K', Piece.Movements["8-Square"], single_step_capture=True, single_step_movement=True),
@@ -145,16 +145,35 @@ class Chezz:
 
         new_board = copy.deepcopy(self.board)  # Deep copy to avoid modifying the original board
         piece, pos, new_pos = move
+        '''
+        # TODO: Implement the necessary chess rules (http://www.uschess.org/content/view/7324):
+            1. If King is in check, only three ways out:
+                a. King moves out of check
+                b. Piece captures the threat
+                c. Blocking the check 
+            2. King cannot put himself into a check
+            3. Types of draws:
+                a. Insufficient mating material. 
+                b. Stalemate
+                c. Three move repetition
+                d. Both players run out of time
+                4. 50 Move rule
 
+        # TODO: Implement end of game check
+        '''
+
+        
         new_board.switch_turn()
         new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
         new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
 
-        # TODO: Implement contagion from zombie
-        # NOTE: contagion of x's zombies happens after the end of the x's turn.
-        # ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (as specified),
-        # those new w zombies will only keep infecting after the end of w's next turn
-        # the only exception is if a Peon get's promoted (to a zombie) (by moving to the end file or being flung), it will not infect at the end of that turn, only at the end of the next turn 
-        # TODO: implement promotion of peon to zombie on last rank
-        
+        '''
+        TODO: Implement contagion from zombie
+        NOTE: contagion of x's zombies happens after the end of the x's turn.
+        ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (as specified),
+        those new w zombies will only keep infecting after the end of w's next turn
+        the only exception is if a Peon get's promoted (to a zombie) (by moving to the end file or being flung), 
+        t will not infect at the end of that turn, only at the end of the next turn 
+        TODO: implement promotion of peon to zombie on last rank
+        '''
         return new_board
