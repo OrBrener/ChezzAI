@@ -22,6 +22,11 @@ class Chezz:
             if isinstance(move[2], list):
                 if move[2][0] == "Cannonball":
                     return_str += f"{num_moves+1}\t{move[2][0]} from {move[1]} going {Piece.directions[move[2][1]]}!\n"
+                elif move[2][0].startswith("Flung"):
+                    return_str += f"{num_moves+1}\t{move[0][1]} on {move[1]} Flung to {move[2][1]}"
+                    if move[2][0] == "Flung-Shattered":
+                        return_str += " Shattered!"
+                    return_str += "\n"
             else:
                 return_str += f"{num_moves+1}\t{move[0][1]}{move[2]}\n"
             num_moves += 1
@@ -148,9 +153,66 @@ class Chezz:
                         new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
                
             return moves
+        
+        def flinger_moves():
+            """
+            Generate all possible moves for the 'Flinger' piece on the board.
+            The function calculates both the standard moves and the special 'flinging' moves
+            for the 'Flinger' piece. The 'Flinger' can move to adjacent squares and can also
+            fling other pieces in the 8-square directions.
+            Returns:
+                list: A list of tuples representing possible moves. Each tuple contains:
+                    - The piece to be moved (str)
+                    - The current position of the piece (str)
+                    - The new position after the move (str) or a list indicating a special move
+                      (e.g., ["Flung", new_pos] or ["Flung-Shattered", new_pos])
+            """
+
+            moves = []
+            flinger_piece = next(piece for piece in pieces if piece.name == 'F')
+            name, move_directions = flinger_piece.name, flinger_piece.move_directions
+            
+            for position in self.board.get_piece_positions(self.board.colour + name):
+                x, y = self.board.get_coordinates_at_position(position) # Convert chess notation to (row, col)
+
+                # Movement of Flinger
+                for dx, dy in move_directions:  
+                    new_x, new_y = x + dx, y + dy
+                    # Convert coordinates to board position (ex: (0,0) = 'a1')
+                    new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
+                    
+                    if new_pos: # Ensure move is within board boundaries
+                        piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
+                        if piece_at_new_pos == '-':  # Empty square → Movement allowed
+                            # Format: (<piece to be moved>, <current piece position>, <new position after move>)
+                            moves.append((self.board.colour + name, position, new_pos))
+                
+                # Flinging
+                for dx, dy in Piece.Movements["8-Square"]:
+                    flung_piece_cords = (x - dx, y - dy)
+                    new_x, new_y = x + dx, y + dy
+                    # Convert coordinates to board position (ex: (0,0) = 'a1')
+                    new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
+                    flung_piece_pos = self.board.convert_coordinates_to_position((flung_piece_cords))
+                    if flung_piece_pos: # if there is a piece to be flung
+                        flung_piece = self.board.get_piece_at_position(flung_piece_pos).strip()
+                        if flung_piece != '-' and flung_piece[0] == self.board.colour: # Make sure to flinging pieces of the same colour 
+                            while new_pos: # Ensure move is within board boundaries
+                                piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
+                                if piece_at_new_pos == '-': # Flinging a piece to an empty square
+                                    moves.append((flung_piece, flung_piece_pos, ["Flung", new_pos]))
+                                elif piece_at_new_pos[0] != self.board.colour: # Flinging a piece onto an opponent's piece, shattering both
+                                    if piece_at_new_pos[1] != 'K': # Cannot fling onto an opponent's King
+                                        moves.append((flung_piece, flung_piece_pos, ["Flung-Shattered", new_pos]))
+
+                                # Update the new coordinates and board position in the next direction
+                                new_x += dx
+                                new_y += dy
+                                new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
+            return moves
 
         # Return a concatenated list of all the moves for each piece on the board
-        return list(chain.from_iterable(generate_moves(piece) for piece in pieces if piece.name not in ['C', 'F'])) + cannon_moves()
+        return list(chain.from_iterable(generate_moves(piece) for piece in pieces if piece.name not in ['C', 'F'])) + cannon_moves() + flinger_moves()
 
     
     def generate_board_files(self):
@@ -249,6 +311,12 @@ class Chezz:
         if isinstance(new_pos, list):
             if new_pos[0] == "Cannonball":
                 self.cannonball_move(pos, new_pos[1], new_board)
+            elif new_pos[0] == "Flung": # Piece is flung to an empty square
+                new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+                new_board.board[Board.position_map[new_pos[1]]] = piece + '\t' # square where the piece is flung to
+            elif new_pos[0] == "Flung-Shattered": # Piece is flung to an enemy square and both are shattered
+                new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+                new_board.board[Board.position_map[new_pos[1]]] = '-\t' # empty square to where it is flung -- both pieces are shattered
         # All other regular movements and captures
         else:        
             new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
