@@ -11,6 +11,13 @@ class Piece:
         "Diagonal-Backward": [(-1, -1), (1, -1)],
     }
 
+    directions = {
+        (-1, -1): "SW",
+        (-1, 1): "NW",
+        (1, -1): "SE",
+        (1, 1): "NE"
+    }
+
     def __init__(self, name, move_directions, capture_directions=None, single_step_movement=False, single_step_capture=False):
         """
         Initializes a Piece object with the given attributes.

@@ -19,7 +19,11 @@ class Chezz:
         return_str += "Moves: \n"
         num_moves = 0
         for move in self.valid_moves():
-            return_str += f"{num_moves+1}\t{move[0][1]}{move[2]}\n"
+            if isinstance(move[2], list):
+                if move[2][0] == "Cannonball":
+                    return_str += f"{num_moves+1}\t{move[2][0]} from {move[1]} going {Piece.directions[move[2][1]]}!\n"
+            else:
+                return_str += f"{num_moves+1}\t{move[0][1]}{move[2]}\n"
             num_moves += 1
         return_str += f"number of valid moves: {num_moves}"
         
@@ -88,9 +92,65 @@ class Chezz:
                         new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
    
             return moves
+        
+        def cannon_moves():
+            """
+            Generate all possible moves for the Cannon piece on the board.
+            The Cannon piece has two types of moves:
+            1. Movement: The Cannon can move to any empty square in its move directions.
+            2. Cannonball: The Cannon can shoot a cannonball in its diagonal directions and destroy all pieces in it's path.
+                Note: it cannot shoot a cannonball that does not destroy any pieces (null move)
+            Returns:
+                list: A list of tuples representing the possible moves for the Cannon piece.
+                      Each tuple is in the format:
+                      (<piece to be moved>, <current piece position>, <new position after move>)
+                      or
+                      (<piece to be moved>, <current piece position>, ["Cannonball", (dx, dy)]) 
+                      Where (dx, dy) are the coordinates in which the cannonball will be moving
+            """
+
+            moves = []
+            cannon_piece = next(piece for piece in pieces if piece.name == 'C')
+            name, move_directions = cannon_piece.name, cannon_piece.move_directions
+            
+            for position in self.board.get_piece_positions(self.board.colour + name):
+                x, y = self.board.get_coordinates_at_position(position) # Convert chess notation to (row, col)
+                
+                # Movement of Cannon
+                for dx, dy in move_directions:  
+                    new_x, new_y = x + dx, y + dy
+                    # Convert coordinates to board position (ex: (0,0) = 'a1')
+                    new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
+                    
+                    if new_pos: # Ensure move is within board boundaries
+                        piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
+                        if piece_at_new_pos == '-':  # Empty square → Movement allowed
+                            # Format: (<piece to be moved>, <current piece position>, <new position after move>)
+                            moves.append((self.board.colour + name, position, new_pos))
+                
+                # Cannonball
+                for dx, dy in Piece.Movements["Diagonals"]:
+                    new_x, new_y = x + dx, y + dy
+                    # Convert coordinates to board position (ex: (0,0) = 'a1')
+                    new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
+
+                    while new_pos: # Ensure move is within board boundaries
+                        piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
+                        if piece_at_new_pos != '-':  # There is a piece → cannonball allowed
+                            # Format: (<piece to be moved>, <current piece position>, ["Cannonball", (dx, dy)]) 
+                            # Where (dx, dy) are the coordinates in which the cannonball will be moving
+                            moves.append((self.board.colour + name, position, ["Cannonball", (dx,dy)]))
+                            break
+
+                        # Update the new coordinates and board position in the next direction
+                        new_x += dx
+                        new_y += dy
+                        new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
+               
+            return moves
 
         # Return a concatenated list of all the moves for each piece on the board
-        return list(chain.from_iterable(generate_moves(piece) for piece in pieces))
+        return list(chain.from_iterable(generate_moves(piece) for piece in pieces if piece.name not in ['C', 'F'])) + cannon_moves()
 
     
     def generate_board_files(self):
@@ -108,9 +168,9 @@ class Chezz:
             The board files are saved in the current directory.
         """
 
-        if self.is_checkmate():
-            print("It is the end of the game, you already won, good job! :)")
-            return
+        # if self.is_checkmate():
+        #     print("It is the end of the game, you already won, good job! :)")
+        #     return
 
         def remove_old_board_files():
             # Get a list of all files in the current directory
@@ -189,8 +249,14 @@ class Chezz:
                 4. 50 Move rule
         ''' 
         
-        new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
-        new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
+        # Special case for Cannon and Flinger
+        if isinstance(new_pos, list):
+            if new_pos[0] == "Cannonball":
+                self.cannonball_move(pos, new_pos[1], new_board)
+        # All other regular movements and captures
+        else:        
+            new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+            new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
 
         '''
         NOTE: contagion of x's zombies happens after the end of the x's turn.
@@ -206,6 +272,33 @@ class Chezz:
         
         new_board.switch_turn()
         return new_board
+    
+    def cannonball_move(self, pos, new_pos, new_board):
+        # Method to handle the movement of a cannonball piece on the chessboard
+            """
+            Moves a cannonball piece from the current position to a new position on the board.
+
+            Parameters:
+            pos (str): The current position of the cannonball in chess notation (e.g., 'a1').
+            new_pos (tuple): A tuple containing the direction of the move as (dx, dy).
+            new_board (Board): The board object representing the current state of the game.
+
+            Returns:
+            None
+            """
+            x, y = self.board.get_coordinates_at_position(pos) # Convert chess notation to (row, col)
+            dx, dy = new_pos
+            new_x, new_y = x + dx, y + dy
+            # Convert coordinates to board position (ex: (0,0) = 'a1')
+            cannon_pos = self.board.convert_coordinates_to_position((new_x, new_y))
+
+            while cannon_pos: # Ensure move is within board boundaries
+                new_board.board[Board.position_map[cannon_pos]] = '-\t' # Cannon destroys all pieces in it's path
+                
+                # Update the coordinates until the end of the board
+                new_x += dx
+                new_y += dy
+                cannon_pos = self.board.convert_coordinates_to_position((new_x, new_y))
     
     def is_checkmate(self):
         """
