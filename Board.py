@@ -1,4 +1,5 @@
 import sys
+from Piece import *
 
 class Board():
 
@@ -83,3 +84,36 @@ class Board():
     def switch_turn(self):
         # Switches the current turn colour
         self.colour = 'b' if self.colour == 'w' else 'w'
+
+    def contagion(self, promoted_pos=[]):
+        """
+        Spread the contagion effect of zombie pieces on the board.
+        This method iterates through all zombie pieces of the current player's color
+        and attempts to convert adjacent enemy pieces into zombies. 
+        The conversion does not affect the King or other Zombies.
+        Aditionionaly, Peons promoted into Zombies on this turn do not cause contagion.
+        Args:
+            promoted_pos (list, optional): A list of positions that have been promoted and should not be affected by contagion.
+        Returns:
+            None
+        """
+        
+        directions = Piece.Movements["Straight-Files"]
+
+        # For all the zombies in the current board
+        for position in self.get_piece_positions(self.colour + 'Z'):
+            # If the Zombie is from a promotion on this turn, skip it
+            if position in promoted_pos:
+                continue
+            x, y = self.get_coordinates_at_position(position) # Convert chess notation to (row, col)
+            for dx, dy in directions:
+                new_x, new_y = x + dx, y + dy
+                # Convert coordinates to board position (ex: (0,0) = 'a1')
+                adjacent_pos = self.convert_coordinates_to_position((new_x, new_y))
+                if adjacent_pos: # Ensure move is within board boundaries
+                    piece_at_adjacent = self.get_piece_at_position(adjacent_pos).strip()
+                    if piece_at_adjacent != '-': # Not an empty space
+                        # Contagion does not effect your own pieces or Kings or other Zombies
+                        if piece_at_adjacent[0] != self.colour and piece_at_adjacent[1] not in ['K','Z']:
+                            self.board[(new_x, new_y)] = self.colour + 'Z' + '\t' # Contagion!
+

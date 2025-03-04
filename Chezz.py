@@ -1,5 +1,4 @@
 from Board import *
-from Piece import *
 from itertools import chain
 import copy
 import os
@@ -145,6 +144,7 @@ class Chezz:
 
         new_board = copy.deepcopy(self.board)  # Deep copy to avoid modifying the original board
         piece, pos, new_pos = move
+
         '''
         # TODO: Implement the necessary chess rules (http://www.uschess.org/content/view/7324):
             1. If King is in check, only three ways out:
@@ -160,20 +160,24 @@ class Chezz:
                 4. 50 Move rule
 
         # TODO: Implement end of game check
-        '''
-
+        ''' 
         
-        new_board.switch_turn()
         new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
         new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
 
+        # TODO: implement promotion of peon to zombie on last rank
+        # list of positions of the promoted Peons (to Zombies) ex: ['a8', 'e8']
+        promoted_pieces = []
+        # promoted_pieces = new_board.promotion()
+
         '''
-        TODO: Implement contagion from zombie
         NOTE: contagion of x's zombies happens after the end of the x's turn.
-        ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (as specified),
+        ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (Piece.Movements["Straight-Files"]),
         those new w zombies will only keep infecting after the end of w's next turn
         the only exception is if a Peon get's promoted (to a zombie) (by moving to the end file or being flung), 
-        t will not infect at the end of that turn, only at the end of the next turn 
-        TODO: implement promotion of peon to zombie on last rank
+        it will not infect at the end of that turn, only at the end of the next turn 
         '''
+        new_board.contagion(promoted_pos = promoted_pieces)
+        
+        new_board.switch_turn()
         return new_board
