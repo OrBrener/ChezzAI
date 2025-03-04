@@ -85,26 +85,31 @@ class Board():
         # Switches the current turn colour
         self.colour = 'b' if self.colour == 'w' else 'w'
 
-    def contagion(self, promoted_pos=[]):
+    def promotion(self):
+        """
+        Promote Peons to Zombies when they reach the last rank.
+        """
+        
+        last_rank = 7 if self.colour == 'w' else 0  # Determine the last rank based on the current player's color
+        for i in range(8):
+            pos = (i, last_rank)
+            piece = self.board[pos].strip()
+            if piece == self.colour + 'P':  # Check if the piece is a Peon of the current player
+                self.board[pos] = self.colour + 'Z' + '\t'  # Promote to zombie
+
+    def contagion(self):
         """
         Spread the contagion effect of zombie pieces on the board.
         This method iterates through all zombie pieces of the current player's color
         and attempts to convert adjacent enemy pieces into zombies. 
         The conversion does not affect the King or other Zombies.
         Aditionionaly, Peons promoted into Zombies on this turn do not cause contagion.
-        Args:
-            promoted_pos (list, optional): A list of positions that have been promoted and should not be affected by contagion.
-        Returns:
-            None
         """
         
         directions = Piece.Movements["Straight-Files"]
 
         # For all the zombies in the current board
         for position in self.get_piece_positions(self.colour + 'Z'):
-            # If the Zombie is from a promotion on this turn, skip it
-            if position in promoted_pos:
-                continue
             x, y = self.get_coordinates_at_position(position) # Convert chess notation to (row, col)
             for dx, dy in directions:
                 new_x, new_y = x + dx, y + dy

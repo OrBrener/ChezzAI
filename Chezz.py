@@ -165,11 +165,6 @@ class Chezz:
         new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
         new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
 
-        # TODO: implement promotion of peon to zombie on last rank
-        # list of positions of the promoted Peons (to Zombies) ex: ['a8', 'e8']
-        promoted_pieces = []
-        # promoted_pieces = new_board.promotion()
-
         '''
         NOTE: contagion of x's zombies happens after the end of the x's turn.
         ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (Piece.Movements["Straight-Files"]),
@@ -177,7 +172,11 @@ class Chezz:
         the only exception is if a Peon get's promoted (to a zombie) (by moving to the end file or being flung), 
         it will not infect at the end of that turn, only at the end of the next turn 
         '''
-        new_board.contagion(promoted_pos = promoted_pieces)
+        new_board.contagion()
+       
+        # Promote Peon's on the last rank into Zombies
+        new_board.promotion()
+        
         
         new_board.switch_turn()
         return new_board
