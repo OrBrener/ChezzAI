@@ -108,6 +108,10 @@ class Chezz:
             The board files are saved in the current directory.
         """
 
+        if self.is_checkmate():
+            print("It is the end of the game, you already won, good job! :)")
+            return
+
         def remove_old_board_files():
             # Get a list of all files in the current directory
             files = os.listdir()
@@ -162,8 +166,7 @@ class Chezz:
         Returns:
             Board: A new board object representing the state of the board after the move has been applied.
         TODO:
-            - Implement the necessary chess rules (http://www.uschess.org/content/view/7324):
-            - Implement end of game check
+            - Implement the necessary chess rules (http://www.uschess.org/content/view/7324) (not required for this assignment)
         """
 
         # modify the board state after applying the move.
@@ -184,8 +187,6 @@ class Chezz:
                 c. Three move repetition
                 d. Both players run out of time
                 4. 50 Move rule
-
-        # TODO: Implement end of game check
         ''' 
         
         new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
@@ -203,6 +204,22 @@ class Chezz:
         # Promote Peon's on the last rank into Zombies
         new_board.promotion()
         
-        
         new_board.switch_turn()
         return new_board
+    
+    def is_checkmate(self):
+        """
+        Determines if the current player is in a checkmate position.
+        Checkmate occurs when the opposing King is captured.
+        Returns:
+            bool: True if the current player is in checkmate, False otherwise.
+        """
+        # Get the position of the opposing King
+        opposing_king = 'wK' if self.board.colour == 'b' else 'bK'
+        king_position = self.board.get_piece_positions(opposing_king)
+
+        # If the opposing King is not on the board, it's checkmate
+        if not king_position:
+            return True
+
+        return False
