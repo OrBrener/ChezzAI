@@ -94,6 +94,19 @@ class Chezz:
 
     
     def generate_board_files(self):
+        """
+        Generates board files for each valid move and removes old board files.
+        This function performs the following steps:
+            1. Removes old board files in the current directory that match the pattern "board.xxx".
+            2. Retrieves a list of valid moves.
+            3. For each valid move, generates a new board configuration.
+            4. Saves the new board configuration to a file named in the format "board.xxx", where "xxx" is a zero-padded counter.
+            The board file contains:
+                - The board's colour and three integer values.
+                - A dictionary of board positions and their corresponding pieces.
+                - Three final lines with the values "0 0 0".
+            The board files are saved in the current directory.
+        """
 
         def remove_old_board_files():
             # Get a list of all files in the current directory
@@ -140,6 +153,19 @@ class Chezz:
             board_counter += 1
     
     def generate_board_after_move(self, move):
+        """
+        Generates a new board state after applying a given move.
+        This method creates a deep copy of the current board state and applies the specified move to generate a new board state.
+        It also handles special rules and conditions such as contagion of zombies, promotion of pawns to zombies, and switching turns.
+        Args:
+            move (tuple): A tuple containing the piece to be moved, its current position, and its new position.
+        Returns:
+            Board: A new board object representing the state of the board after the move has been applied.
+        TODO:
+            - Implement the necessary chess rules (http://www.uschess.org/content/view/7324):
+            - Implement end of game check
+        """
+
         # modify the board state after applying the move.
 
         new_board = copy.deepcopy(self.board)  # Deep copy to avoid modifying the original board
