@@ -168,10 +168,6 @@ class Chezz:
             The board files are saved in the current directory.
         """
 
-        # if self.is_checkmate():
-        #     print("It is the end of the game, you already won, good job! :)")
-        #     return
-
         def remove_old_board_files():
             # Get a list of all files in the current directory
             files = os.listdir()
@@ -248,7 +244,7 @@ class Chezz:
                 d. Both players run out of time
                 4. 50 Move rule
         ''' 
-        
+
         # Special case for Cannon and Flinger
         if isinstance(new_pos, list):
             if new_pos[0] == "Cannonball":
