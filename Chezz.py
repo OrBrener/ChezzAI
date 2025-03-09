@@ -268,10 +268,6 @@ class Chezz:
 
                 file.write("}\n")  # Closing curly bracket
 
-                # Write the final three lines
-                file.write("0 0 0\n")
-
-
             board_counter += 1
     
     def generate_board_after_move(self, move):

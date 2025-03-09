@@ -29,11 +29,14 @@ class Board():
         # first line
         self.colour, self.i1, self.i2, self.i3 = sys.stdin.readline().split()
         
-        # Read remaining board input (excluding last 3 lines, not including empty last line)
-        lines = sys.stdin.readlines()[:-2]  # Removes the last 3 lines
+        # Read remaining board input (until closing brackets)
+        lines = sys.stdin.readlines()
 
         # Process each line in board.txt
         for line in lines:
+            # closing bracket indicates end of board file
+            if (line == '}\n'):
+                break
             parts = line.strip().split()
             if len(parts) == 2:
                 square, piece = parts
