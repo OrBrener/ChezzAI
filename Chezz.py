@@ -286,11 +286,18 @@ class Chezz:
         new_board = copy.deepcopy(self.board)  # Deep copy to avoid modifying the original board
         piece, pos, new_pos = move
 
-        # Special case for Cannon
-        if new_pos[0] == "Cannonball":
-            self.cannonball_move(pos, new_pos[1], new_board)
+        # Special case for Cannon and Flinger
+        if isinstance(new_pos, list):
+            if new_pos[0] == "Cannonball":
+                self.cannonball_move(pos, new_pos[1], new_board)
+            elif new_pos[0] == "Flung": # Piece is flung to an empty square
+                new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+                new_board.board[Board.position_map[new_pos[1]]] = piece + '\t' # square where the piece is flung to
+            elif new_pos[0] == "Flung-Shattered": # Piece is flung to an enemy square and both are shattered
+                new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+                new_board.board[Board.position_map[new_pos[1]]] = '-\t' # empty square to where it is flung -- both pieces are shattered
         # All other regular movements and captures
-        elif not isinstance(new_pos, list):        
+        else:        
             new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
             new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
 
@@ -305,14 +312,6 @@ class Chezz:
        
         # Promote Peon's on the last rank into Zombies
         new_board.promotion()
-        
-        # Special case for Flinger (after Peon promotion, since flung Peons cannot be promoted right away)
-        if new_pos[0] == "Flung": # Piece is flung to an empty square
-            new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
-            new_board.board[Board.position_map[new_pos[1]]] = piece + '\t' # square where the piece is flung to
-        elif new_pos[0] == "Flung-Shattered": # Piece is flung to an enemy square and both are shattered
-            new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
-            new_board.board[Board.position_map[new_pos[1]]] = '-\t' # empty square to where it is flung -- both pieces are shattered
         
         new_board.switch_turn()
         return new_board
