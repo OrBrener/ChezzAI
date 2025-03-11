@@ -452,7 +452,7 @@ Searching for boards:
 |        |
 | CP     |
 |PP PZPPP|
-|FNzQKBNR|
+|FNpQKBNR|
 +--------+
   You missed 1 legal boards.
 +--------+
@@ -463,7 +463,7 @@ Searching for boards:
 |        |
 | CP     |
 |PP PZPPP|
-|FNpQKBNR|
+|FNzQKBNR|
 +--------+
   Deleting output boards
 --------------------------------------------------------------------------------
@@ -515,32 +515,12 @@ Command a3 generated the following output:
 And no error messages.
 Searching for boards:
   Found 17 output boards
-  Found 15 solution boards
-  You generated 2 illegal boards.
-+--------+
-| ncqkbnr|
-|p ppzpp |
-| pf     |
-|        |
-| C      |
-|  P     |
-|PP PZPPP|
-|FN QKBNR|
-+--------+
-+--------+
-| ncqkbnr|
-|p ppzpp |
-| pf     |
-|        |
-|        |
-|C P     |
-|PP PZPPP|
-|FN QKBNR|
-+--------+
+  Found 17 solution boards
+  You generated 0 illegal boards.
   You missed 0 legal boards.
   Deleting output boards
 --------------------------------------------------------------------------------
-13/15
+17/17
 ================================================================================
 Test Case 9
 Turn: b
@@ -614,7 +594,7 @@ Searching for boards:
 |        |
 |  PZ    |
 |PPCP PPP|
-|FNzQKBNR|
+|FNpQKBNR|
 +--------+
   You missed 1 legal boards.
 +--------+
@@ -625,7 +605,7 @@ Searching for boards:
 |        |
 |  PZ    |
 |PPCP PPP|
-|FNpQKBNR|
+|FNzQKBNR|
 +--------+
   Deleting output boards
 --------------------------------------------------------------------------------
@@ -749,22 +729,12 @@ Command a3 generated the following output:
 And no error messages.
 Searching for boards:
   Found 31 output boards
-  Found 30 solution boards
-  You generated 1 illegal boards.
-+--------+
-| n qkbnr|
-|p cpzpp |
-| pf     |
-|        |
-|   Z    |
-|  P     |
-|PP P PPP|
-|FN QKBNR|
-+--------+
+  Found 31 solution boards
+  You generated 0 illegal boards.
   You missed 0 legal boards.
   Deleting output boards
 --------------------------------------------------------------------------------
-29/30
+31/31
 ================================================================================
 Test Case 12
 Turn: w
@@ -1274,4 +1244,4 @@ Searching for boards:
 --------------------------------------------------------------------------------
 16/16
 ********************************************************************************
-Grand total:  465/476
+Grand total:  471/475
