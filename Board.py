@@ -56,7 +56,41 @@ class Board():
             board_representation += str(j + 1) + "\t" + " ".join(self.board[(i, j)] for i in range(8)) + "\n"
         board_representation += "\ta\t b\t c\t d\t e\t f\t g\t h\n"
         return board_representation
-    
+
+    def board_string_to_file(board_string, file_path):
+        """
+        Converts a valid board string to a corresponding valid board file.
+        
+        :param board_string: A string representation of the board.
+        :param file_path: The path to the output file.
+        """
+        lines = board_string.strip().split('\n')
+        board_lines = lines[:-1]
+        col_labels = lines[-1].split()
+
+        # Extract the board configuration
+        board_config = []
+        for line in board_lines:
+            parts = line.split()
+            rank = parts[0]
+            pieces = parts[1:]
+            for file, piece in zip(col_labels, pieces):
+                if piece != '-':
+                    board_config.append((file + rank, piece))
+
+        # Sort the board configuration
+        board_config.sort(key=lambda x: Board.position_map[x[0]])
+
+        # Format the board configuration
+        formatted_board_config = [f"  {pos}: '{piece}'" for pos, piece in board_config]
+
+        # Create the board file content
+        board_file_content = "w 0 60000 0\n{\n" + ",\n".join(formatted_board_config) + "\n}\n"
+
+        # Write to the file
+        with open(file_path, 'w') as file:
+            file.write(board_file_content)
+
     def get_piece_at_position(self, pos):
         # return the piece at the given board position
         return self.board[Board.position_map[pos]]
