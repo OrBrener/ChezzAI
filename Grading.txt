@@ -443,31 +443,11 @@ And no error messages.
 Searching for boards:
   Found 33 output boards
   Found 33 solution boards
-  You generated 1 illegal boards.
-+--------+
-| ncqkbnr|
-|p  pzpp |
-| pf     |
-|        |
-|        |
-| CP     |
-|PP PZPPP|
-|FNpQKBNR|
-+--------+
-  You missed 1 legal boards.
-+--------+
-| ncqkbnr|
-|p  pzpp |
-| pf     |
-|        |
-|        |
-| CP     |
-|PP PZPPP|
-|FNzQKBNR|
-+--------+
+  You generated 0 illegal boards.
+  You missed 0 legal boards.
   Deleting output boards
 --------------------------------------------------------------------------------
-31/33
+33/33
 ================================================================================
 Test Case 8
 Turn: w
@@ -585,31 +565,11 @@ And no error messages.
 Searching for boards:
   Found 33 output boards
   Found 33 solution boards
-  You generated 1 illegal boards.
-+--------+
-| ncqkbnr|
-|p  pzpp |
-| pf     |
-|        |
-|        |
-|  PZ    |
-|PPCP PPP|
-|FNpQKBNR|
-+--------+
-  You missed 1 legal boards.
-+--------+
-| ncqkbnr|
-|p  pzpp |
-| pf     |
-|        |
-|        |
-|  PZ    |
-|PPCP PPP|
-|FNzQKBNR|
-+--------+
+  You generated 0 illegal boards.
+  You missed 0 legal boards.
   Deleting output boards
 --------------------------------------------------------------------------------
-31/33
+33/33
 ================================================================================
 Test Case 10
 Turn: w
@@ -1244,4 +1204,4 @@ Searching for boards:
 --------------------------------------------------------------------------------
 16/16
 ********************************************************************************
-Grand total:  471/475
+Grand total:  475/475
