@@ -118,10 +118,13 @@ dmypy.json
 
 output.txt
 *.docx
-# a3 executable
+# executables
 a3 
+a4
 /.vscode
 # valid move board files (program output)
 board.*
 # folder for input files used for testing
 boards/
+# grading file
+Grading.txt
