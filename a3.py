@@ -12,8 +12,9 @@ def main():
     if args.genBoardFile:
         file_name = args.genBoardFile
         file_path = f"boards/{file_name}.txt"
+        turn = sys.stdin.readline().strip()
         board_string = sys.stdin.read()
-        Board.board_string_to_file(board_string, file_path)
+        Board.board_string_to_file(turn, board_string, file_path)
     else:
         game = Chezz()
         print(game)

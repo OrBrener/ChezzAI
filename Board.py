@@ -57,7 +57,7 @@ class Board():
         board_representation += "\ta\t b\t c\t d\t e\t f\t g\t h\n"
         return board_representation
 
-    def board_string_to_file(board_string, file_path):
+    def board_string_to_file(turn, board_string, file_path):
         """
         Converts a valid board string to a corresponding valid board file.
         
@@ -85,7 +85,7 @@ class Board():
         formatted_board_config = [f"  {pos}: '{piece}'" for pos, piece in board_config]
 
         # Create the board file content
-        board_file_content = "w 0 60000 0\n{\n" + ",\n".join(formatted_board_config) + "\n}\n"
+        board_file_content = turn + " 0 60000 0\n{\n" + ",\n".join(formatted_board_config) + "\n}\n"
 
         # Write to the file
         with open(file_path, 'w') as file:
