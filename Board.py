@@ -1,4 +1,7 @@
 import sys
+import copy
+import os
+import re
 from Piece import *
 
 class Board():
@@ -47,7 +50,6 @@ class Board():
                     piece = piece[:-1].strip(",") # remove trailing ','
                 if square in Board.position_map:
                     self.board[Board.position_map[square]] = piece + '\t'  # Assign piece to board coordinate
-
 
     def __str__(self):
         # return a string representation of the board 8x8 with row and col titles
@@ -140,7 +142,7 @@ class Board():
         This method iterates through all zombie pieces of the current player's color
         and attempts to convert adjacent enemy pieces into zombies. 
         The conversion does not affect the King or other Zombies.
-        Aditionionaly, Peons promoted into Zombies on this turn do not cause contagion.
+        Additionally, Peons promoted into Zombies on this turn do not cause contagion.
         """
         
         directions = Piece.Movements["Straight-Files"]
@@ -159,3 +161,129 @@ class Board():
                         if piece_at_adjacent[0] != self.colour and piece_at_adjacent[1] not in ['K','Z']:
                             self.board[(new_x, new_y)] = self.colour + 'Z' + '\t' # Contagion!
 
+    def cannonball_move(self, pos, new_pos, new_board):
+        # Method to handle the movement of a cannonball piece on the chessboard
+            """
+            Moves a cannonball piece from the current position to a new position on the board.
+
+            Parameters:
+            pos (str): The current position of the cannonball in chess notation (e.g., 'a1').
+            new_pos (tuple): A tuple containing the direction of the move as (dx, dy).
+            new_board (Board): The board object representing the current state of the game.
+
+            Returns:
+            None
+            """
+            x, y = self.get_coordinates_at_position(pos) # Convert chess notation to (row, col)
+            dx, dy = new_pos
+            new_x, new_y = x + dx, y + dy
+            # Convert coordinates to board position (ex: (0,0) = 'a1')
+            cannon_pos = self.convert_coordinates_to_position((new_x, new_y))
+
+            while cannon_pos: # Ensure move is within board boundaries
+                new_board.board[Board.position_map[cannon_pos]] = '-\t' # Cannon destroys all pieces in it's path
+                
+                # Update the coordinates until the end of the board
+                new_x += dx
+                new_y += dy
+                cannon_pos = self.convert_coordinates_to_position((new_x, new_y))
+    
+    def remove_old_board_files(self):
+            # Get a list of all files in the current directory
+            files = os.listdir()
+            
+            # Define the pattern for board files with exactly three digits after "board."
+            pattern = re.compile(r"^board\.\d{3}$")
+            
+            # Loop through the files and remove those that match the board pattern
+            for file in files:
+                if pattern.match(file):  # Check if the file matches the pattern "board.xxx"
+                    os.remove(file)
+
+    def generate_board_files(self, valid_moves):
+        """
+        Generates board files for each valid move and removes old board files.
+        This function performs the following steps:
+            1. Removes old board files in the current directory that match the pattern "board.xxx".
+            2. Retrieves a list of valid moves.
+            3. For each valid move, generates a new board configuration.
+            4. Saves the new board configuration to a file named in the format "board.xxx", where "xxx" is a zero-padded counter.
+            The board file contains:
+                - The board's colour and three integer values.
+                - A dictionary of board positions and their corresponding pieces.
+                - Three final lines with the values "0 0 0".
+            The board files are saved in the current directory.
+        """
+        self.remove_old_board_files()
+
+        board_counter = 0
+        for move in valid_moves:
+            new_board = self.generate_board_after_move(move)
+            
+            # Save the new board to a file
+            filename = f"board.{str(board_counter).zfill(3)}"  # Name format: board.000, board.001, ...
+            
+            # open the output file and write the valid board encoding after the move
+            with open(filename, 'w', encoding="utf-8") as file:
+                file.write(f"{new_board.colour} {new_board.i1} {new_board.i2} {new_board.i3}\n")
+                file.write("{\n")  # Open curly bracket
+
+                # Sort board positions in correct order and write them to file
+                piece_entries = []
+                for (x, y), piece in new_board.board.items():  
+                    if piece.strip() != "-":
+                        piece_entries.append(f"  {new_board.convert_coordinates_to_position((x,y))}: '{piece.strip()}'")
+
+                # Join all entries with ",\n" and write them
+                file.write(",\n".join(piece_entries) + "\n")
+
+                file.write("}\n")  # Closing curly bracket
+
+            board_counter += 1
+    
+    def generate_board_after_move(self, move):
+        """
+        Generates a new board state after applying a given move.
+        This method creates a deep copy of the current board state and applies the specified move to generate a new board state.
+        It also handles special rules and conditions such as contagion of zombies, promotion of pawns to zombies, and switching turns.
+        Args:
+            move (tuple): A tuple containing the piece to be moved, its current position, and its new position.
+        Returns:
+            Board: A new board object representing the state of the board after the move has been applied.
+        """
+
+        # modify the board state after applying the move.
+
+        new_board = copy.deepcopy(self)  # Deep copy to avoid modifying the original board
+        piece, pos, new_pos = move
+
+        # Special case for Cannon and Flinger
+        if isinstance(new_pos, list):
+            if new_pos[0] == "Cannonball":
+                self.cannonball_move(pos, new_pos[1], new_board)
+            elif new_pos[0] == "Flung": # Piece is flung to an empty square
+                new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+                new_board.board[Board.position_map[new_pos[1]]] = piece + '\t' # square where the piece is flung to
+            elif new_pos[0] == "Flung-Shattered": # Piece is flung to an enemy square and both are shattered
+                new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+                new_board.board[Board.position_map[new_pos[1]]] = '-\t' # empty square to where it is flung -- both pieces are shattered
+        # All other regular movements and captures
+        else:        
+            new_board.board[Board.position_map[pos]] = '-\t' # empty square where the piece used to be
+            new_board.board[Board.position_map[new_pos]] = piece + '\t' # square where the piece is moving to is overwritten (either a simple movement of the piece or an opponent capture)
+
+        '''
+        NOTE: contagion of x's zombies happens after the end of the x's turn.
+        ex: if w moves their zombie up a square, at the end of w's turn it will infect any piece around it (Piece.Movements["Straight-Files"]),
+        those new w zombies will only keep infecting after the end of w's next turn
+        the only exception is if a Peon get's promoted (to a zombie) (by moving to the end file or being flung), 
+        it will not infect at the end of that turn, only at the end of the next turn 
+        '''
+        new_board.contagion()
+       
+        # Promote Peon's on the last rank into Zombies
+        new_board.promotion()
+        
+        new_board.switch_turn()
+        return new_board
+    

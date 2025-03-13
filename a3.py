@@ -22,7 +22,7 @@ def main():
         if game.is_checkmate():
             print("It is the end of the game, you already won, good job! :)")
         else:
-            game.generate_board_files()      
+            game.board.generate_board_files(game.valid_moves())      
 
 
 if __name__ == "__main__":
