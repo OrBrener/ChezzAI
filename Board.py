@@ -200,7 +200,7 @@ class Board():
                 if pattern.match(file):  # Check if the file matches the pattern "board.xxx"
                     os.remove(file)
 
-    def generate_board_files(self, valid_moves):
+    def generate_board_files(self, valid_moves, output_mode='file'):
         """
         Generates board files for each valid move and removes old board files.
         This function performs the following steps:
@@ -214,34 +214,33 @@ class Board():
                 - Three final lines with the values "0 0 0".
             The board files are saved in the current directory.
         """
-        self.remove_old_board_files()
+        if output_mode == 'file':
+            self.remove_old_board_files()
 
         board_counter = 0
         for move in valid_moves:
             new_board = self.generate_board_after_move(move)
             
-            # Save the new board to a file
+            # Save the new board to a file or print to stdout
             filename = f"board.{str(board_counter).zfill(3)}"  # Name format: board.000, board.001, ...
-            
-            # open the output file and write the valid board encoding after the move
-            with open(filename, 'w', encoding="utf-8") as file:
-                file.write(f"{new_board.colour} {new_board.i1} {new_board.i2} {new_board.i3}\n")
-                file.write("{\n")  # Open curly bracket
+            board_content = f"{new_board.colour} {new_board.i1} {new_board.i2} {new_board.i3}\n"
+            board_content += "{\n"  # Open curly bracket
 
-                # Sort board positions in correct order and write them to file
-                piece_entries = []
-                for (x, y), piece in new_board.board.items():  
-                    if piece.strip() != "-":
-                        piece_entries.append(f"  {new_board.convert_coordinates_to_position((x,y))}: '{piece.strip()}'")
+            # Sort board positions in correct order and write them to file
+            piece_entries = []
+            for (x, y), piece in new_board.board.items():  
+                if piece.strip() != "-":
+                    piece_entries.append(f"  {new_board.convert_coordinates_to_position((x,y))}: '{piece.strip()}'")
 
-                # Join all entries with ",\n" and write them
-                file.write(",\n".join(piece_entries) + "\n")
+            # Join all entries with ",\n" and write them
+            board_content += ",\n".join(piece_entries) + "\n"
+            board_content += "}\n"  # Closing curly bracket
 
-                file.write("}\n")  # Closing curly bracket
-
-            # Print the board file content to stdout
-            with open(filename, 'r', encoding="utf-8") as file:
-                print(file.read())
+            if output_mode == 'file':
+                with open(filename, 'w', encoding="utf-8") as file:
+                    file.write(board_content)
+            elif output_mode == 'stdout':
+                print(board_content)
 
             board_counter += 1
     
@@ -290,4 +289,4 @@ class Board():
         
         new_board.switch_turn()
         return new_board
-    
+

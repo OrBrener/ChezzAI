@@ -17,7 +17,7 @@ def main():
         Board.board_string_to_file(turn, board_string, file_path)
     else:
         game = Chezz()
-        game.board.generate_board_files([game.valid_moves()[0]])
+        game.board.generate_board_files([game.valid_moves()[0]], 'stdout')
         # print(game)
 
         # if game.is_checkmate():
