@@ -2,16 +2,20 @@ from Board import *
 from itertools import chain
 
 class Chezz:
-    def __init__(self, board=None):
+    def __init__(self, board=None, time_used=0, time_allowed=60000, num_moves=0):
         if board:
             self.board = board
         else: 
             self.board = Board()
             self.board.populate_board()
+        self.time_used = self.board.time_used
+        self.time_allowed = self.board.time_allowed
+        self.num_moves = self.board.num_moves
 
     def __str__( self ):
         # return a string representation of the current state of the board and all the valid moves
-        return_str = str(self.board)
+        return_str = f"Time used: {self.time_used}\nTime allowed: {self.time_allowed}\nNumber of moves: {self.num_moves}\n"
+        return_str += str(self.board)
         
         return_str += "Moves: \n"
         num_moves = 0
@@ -34,7 +38,7 @@ class Chezz:
     def valid_moves(self):
 
         # Directionality for Peons
-        direction = ["Up","Forward"] if self.board.colour == 'w' else ["Down","Backward"]  # White moves up, Black moves down
+        direction = ["Up","Forward"] if self.board.color == 'w' else ["Down","Backward"]  # White moves up, Black moves down
 
         # Define pieces with their name, move_directions, capture_directions, single_step_movement, single_step_capture
         # TODO: Reorder the pieces from most important to least so that the order of the moves is more efficient for A4
@@ -59,7 +63,7 @@ class Chezz:
             moves = []
 
             # Get all positions of the given piece type
-            for position in self.board.get_piece_positions(self.board.colour + piece.name):
+            for position in self.board.get_piece_positions(self.board.color + piece.name):
                 x, y = self.board.get_coordinates_at_position(position) # Convert chess notation to (row, col)
                 
                 # Loop through each movement and capture direction
@@ -74,11 +78,11 @@ class Chezz:
                         if piece_at_new_pos == '-':  # Empty square → Movement allowed
                             if (dx, dy) in piece.move_directions:
                                 # Format: (<piece to be moved>, <current piece position>, <new position after move>)
-                                moves.append((self.board.colour + piece.name, position, new_pos))
+                                moves.append((self.board.color + piece.name, position, new_pos))
                         else: # There is a piece at the new position  
                             # Opponent's piece for capture 
-                            if (dx, dy) in piece.capture_directions and piece_at_new_pos[0] != self.board.colour:
-                                moves.append((self.board.colour + piece.name, position, new_pos))  # Capture
+                            if (dx, dy) in piece.capture_directions and piece_at_new_pos[0] != self.board.color:
+                                moves.append((self.board.color + piece.name, position, new_pos))  # Capture
                             break # After capture, piece cannot move any further in that direction
                         
                         # Stop if it's a capture or single-step piece (like a King)
@@ -115,7 +119,7 @@ class Chezz:
             cannon_piece = next(piece for piece in pieces if piece.name == 'C')
             name, move_directions = cannon_piece.name, cannon_piece.move_directions
             
-            for position in self.board.get_piece_positions(self.board.colour + name):
+            for position in self.board.get_piece_positions(self.board.color + name):
                 x, y = self.board.get_coordinates_at_position(position) # Convert chess notation to (row, col)
                 
                 # Movement of Cannon
@@ -128,7 +132,7 @@ class Chezz:
                         piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
                         if piece_at_new_pos == '-':  # Empty square → Movement allowed
                             # Format: (<piece to be moved>, <current piece position>, <new position after move>)
-                            moves.append((self.board.colour + name, position, new_pos))
+                            moves.append((self.board.color + name, position, new_pos))
                 
                 # Cannonball
                 for dx, dy in Piece.Movements["Diagonals"]:
@@ -141,7 +145,7 @@ class Chezz:
                         if piece_at_new_pos != '-':  # There is a piece → cannonball allowed
                             # Format: (<piece to be moved>, <current piece position>, ["Cannonball", (dx, dy)]) 
                             # Where (dx, dy) are the coordinates in which the cannonball will be moving
-                            moves.append((self.board.colour + name, position, ["Cannonball", (dx,dy)]))
+                            moves.append((self.board.color + name, position, ["Cannonball", (dx,dy)]))
                             break
 
                         # Update the new coordinates and board position in the next direction
@@ -169,7 +173,7 @@ class Chezz:
             flinger_piece = next(piece for piece in pieces if piece.name == 'F')
             name, move_directions = flinger_piece.name, flinger_piece.move_directions
             
-            for position in self.board.get_piece_positions(self.board.colour + name):
+            for position in self.board.get_piece_positions(self.board.color + name):
                 x, y = self.board.get_coordinates_at_position(position) # Convert chess notation to (row, col)
 
                 # Movement of Flinger
@@ -182,7 +186,7 @@ class Chezz:
                         piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
                         if piece_at_new_pos == '-':  # Empty square → Movement allowed
                             # Format: (<piece to be moved>, <current piece position>, <new position after move>)
-                            moves.append((self.board.colour + name, position, new_pos))
+                            moves.append((self.board.color + name, position, new_pos))
                 
                 # Flinging
                 for dx, dy in Piece.Movements["8-Square"]:
@@ -193,12 +197,12 @@ class Chezz:
                     flung_piece_pos = self.board.convert_coordinates_to_position((flung_piece_cords))
                     if flung_piece_pos: # if there is a piece to be flung
                         flung_piece = self.board.get_piece_at_position(flung_piece_pos).strip()
-                        if flung_piece != '-' and flung_piece[0] == self.board.colour: # Make sure to flinging pieces of the same colour 
+                        if flung_piece != '-' and flung_piece[0] == self.board.color: # Make sure to flinging pieces of the same colour 
                             while new_pos: # Ensure move is within board boundaries
                                 piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
                                 if piece_at_new_pos == '-': # Flinging a piece to an empty square
                                     moves.append((flung_piece, flung_piece_pos, ["Flung", new_pos]))
-                                elif piece_at_new_pos[0] != self.board.colour: # Flinging a piece onto an opponent's piece, shattering both
+                                elif piece_at_new_pos[0] != self.board.color: # Flinging a piece onto an opponent's piece, shattering both
                                     if piece_at_new_pos[1] != 'K': # Cannot fling onto an opponent's King
                                         moves.append((flung_piece, flung_piece_pos, ["Flung-Shattered", new_pos]))
 
@@ -219,7 +223,7 @@ class Chezz:
             bool: True if the current player is in checkmate, False otherwise.
         """
         # Get the position of the opposing King
-        opposing_king = 'wK' if self.board.colour == 'b' else 'bK'
+        opposing_king = 'wK' if self.board.color == 'b' else 'bK'
         king_position = self.board.get_piece_positions(opposing_king)
 
         # If the opposing King is not on the board, it's checkmate

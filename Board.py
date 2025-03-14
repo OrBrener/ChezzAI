@@ -21,16 +21,19 @@ class Board():
     def __init__(self):
         # Initialize an empty chessboard (8x8 grid)
         self.board = { (i, j): '-\t' for i in range(8) for j in range(8) }
-        self.colour = 'w'
-        self.i1 = '0'
-        self.i2 = '60000'
-        self.i3 = '0'
+        self.color = 'w'
+        self.time_used = 0
+        self.time_allowed = 60000
+        self.num_moves = 0
     
     def populate_board(self):
         # store board info from stdin board file input
 
         # first line
-        self.colour, self.i1, self.i2, self.i3 = sys.stdin.readline().split()
+        self.color, self.time_used, self.time_allowed, self.num_moves = sys.stdin.readline().split()
+        self.time_used = int(self.time_used)
+        self.time_allowed = int(self.time_allowed)
+        self.num_moves = int(self.num_moves)
         
         # Read remaining board input (until closing brackets)
         lines = sys.stdin.readlines()
@@ -122,19 +125,19 @@ class Board():
     
     def switch_turn(self):
         # Switches the current turn colour
-        self.colour = 'b' if self.colour == 'w' else 'w'
+        self.color = 'b' if self.color == 'w' else 'w'
 
     def promotion(self):
         """
         Promote Peons to Zombies when they reach the last rank.
         """
         
-        last_rank = 7 if self.colour == 'w' else 0  # Determine the last rank based on the current player's color
+        last_rank = 7 if self.color == 'w' else 0  # Determine the last rank based on the current player's color
         for i in range(8):
             pos = (i, last_rank)
             piece = self.board[pos].strip()
-            if piece == self.colour + 'P':  # Check if the piece is a Peon of the current player
-                self.board[pos] = self.colour + 'Z' + '\t'  # Promote to zombie
+            if piece == self.color + 'P':  # Check if the piece is a Peon of the current player
+                self.board[pos] = self.color + 'Z' + '\t'  # Promote to zombie
 
     def contagion(self):
         """
@@ -148,7 +151,7 @@ class Board():
         directions = Piece.Movements["Straight-Files"]
 
         # For all the zombies in the current board
-        for position in self.get_piece_positions(self.colour + 'Z'):
+        for position in self.get_piece_positions(self.color + 'Z'):
             x, y = self.get_coordinates_at_position(position) # Convert chess notation to (row, col)
             for dx, dy in directions:
                 new_x, new_y = x + dx, y + dy
@@ -158,8 +161,8 @@ class Board():
                     piece_at_adjacent = self.get_piece_at_position(adjacent_pos).strip()
                     if piece_at_adjacent != '-': # Not an empty space
                         # Contagion does not effect your own pieces or Kings or other Zombies
-                        if piece_at_adjacent[0] != self.colour and piece_at_adjacent[1] not in ['K','Z']:
-                            self.board[(new_x, new_y)] = self.colour + 'Z' + '\t' # Contagion!
+                        if piece_at_adjacent[0] != self.color and piece_at_adjacent[1] not in ['K','Z']:
+                            self.board[(new_x, new_y)] = self.color + 'Z' + '\t' # Contagion!
 
     def cannonball_move(self, pos, new_pos, new_board):
         # Method to handle the movement of a cannonball piece on the chessboard
@@ -219,11 +222,12 @@ class Board():
 
         board_counter = 0
         for move in valid_moves:
-            new_board = self.generate_board_after_move(move)
+            # TODO: pass in the time used to generate each new move
+            new_board = self.generate_board_after_move(move, time_used=0)
             
             # Save the new board to a file or print to stdout
             filename = f"board.{str(board_counter).zfill(3)}"  # Name format: board.000, board.001, ...
-            board_content = f"{new_board.colour} {new_board.i1} {new_board.i2} {new_board.i3}\n"
+            board_content = f"{new_board.color} {new_board.time_used} {new_board.time_allowed} {new_board.num_moves}\n"
             board_content += "{\n"  # Open curly bracket
 
             # Sort board positions in correct order and write them to file
@@ -244,7 +248,7 @@ class Board():
 
             board_counter += 1
     
-    def generate_board_after_move(self, move):
+    def generate_board_after_move(self, move, time_used=0):
         """
         Generates a new board state after applying a given move.
         This method creates a deep copy of the current board state and applies the specified move to generate a new board state.
@@ -288,5 +292,7 @@ class Board():
         new_board.promotion()
         
         new_board.switch_turn()
+        new_board.num_moves += 1
+        new_board.time_used += time_used
         return new_board
 
