@@ -126,5 +126,3 @@ a4
 board.*
 # folder for input files used for testing
 boards/
-# grading file
-Grading.txt
