@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Run the a4.py main file
+python3 a4.py

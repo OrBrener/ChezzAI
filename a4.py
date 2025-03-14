@@ -17,12 +17,13 @@ def main():
         Board.board_string_to_file(turn, board_string, file_path)
     else:
         game = Chezz()
-        print(game)
+        game.board.generate_board_files([game.valid_moves()[0]])
+        # print(game)
 
-        if game.is_checkmate():
-            print("It is the end of the game, you already won, good job! :)")
-        else:
-            game.board.generate_board_files(game.valid_moves())      
+        # if game.is_checkmate():
+        #     print("It is the end of the game, you already won, good job! :)")
+        # else:
+        #     game.board.generate_board_files(game.valid_moves())      
 
 
 if __name__ == "__main__":

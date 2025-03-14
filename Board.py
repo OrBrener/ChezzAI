@@ -239,6 +239,10 @@ class Board():
 
                 file.write("}\n")  # Closing curly bracket
 
+            # Print the board file content to stdout
+            with open(filename, 'r', encoding="utf-8") as file:
+                print(file.read())
+
             board_counter += 1
     
     def generate_board_after_move(self, move):
