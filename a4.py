@@ -40,6 +40,12 @@ def main(func_name, *func_args):
             for _ in range(n):
                 best_move = game.max_score(game, depth)
                 print(best_move)
+
+        def get_best_move():
+            game = Chezz()
+            best_move = game.max_score(game, 3)[1]
+            game.board.generate_board_files([best_move], 'stdout')
+
             
         
         # Get the function by name and call it with additional arguments
@@ -51,4 +57,5 @@ def main(func_name, *func_args):
 
 if __name__ == "__main__":
     # main("run_until_end_of_time_with_depth_n", 4)
-    main("run_n_times_with_given_depth", 3, 4)
+    # main("run_n_times_with_given_depth", 3, 4)
+    main("get_best_move")
