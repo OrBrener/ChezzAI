@@ -42,18 +42,17 @@ class Chezz:
         direction = ["Up","Forward"] if self.board.color == 'w' else ["Down","Backward"]  # White moves up, Black moves down
 
         # Define pieces with their name, move_directions, capture_directions, single_step_movement, single_step_capture
-        # TODO: Reorder the pieces from most important to least so that the order of the moves is more efficient for A4
-        pieces = [
-            Piece('K', Piece.Movements["8-Square"], single_step_capture=True, single_step_movement=True),
-            Piece('B', Piece.Movements["Diagonals"]),
-            Piece('R', Piece.Movements["Straight-Files"]),
-            Piece('Q', Piece.Movements["8-Square"]),
-            Piece('N', Piece.Movements["L-Shape"], single_step_capture=True, single_step_movement=True),
-            Piece('P', Piece.Movements[f"{direction[0]}-1"], capture_directions=Piece.Movements[f"Diagonal-{direction[1]}"], single_step_capture=True, single_step_movement=True),
-            Piece('Z', Piece.Movements["Straight-Files"], single_step_capture=True, single_step_movement=True),
-            Piece('C', Piece.Movements["Straight-Files"], capture_directions=[], single_step_movement=True),
-            Piece('F', Piece.Movements["8-Square"], capture_directions=[], single_step_movement=True),
-        ]
+        pieces = {
+            'Q': Piece('Q', Piece.Movements["8-Square"]),
+            'F': Piece('F', Piece.Movements["8-Square"], capture_directions=[], single_step_movement=True),
+            'Z': Piece('Z', Piece.Movements["Straight-Files"], single_step_capture=True, single_step_movement=True),
+            'C': Piece('C', Piece.Movements["Straight-Files"], capture_directions=[], single_step_movement=True),
+            'R': Piece('R', Piece.Movements["Straight-Files"]),           
+            'K': Piece('K', Piece.Movements["8-Square"], single_step_capture=True, single_step_movement=True),
+            'N': Piece('N', Piece.Movements["L-Shape"], single_step_capture=True, single_step_movement=True),
+            'B': Piece('B', Piece.Movements["Diagonals"]),
+            'P': Piece('P', Piece.Movements[f"{direction[0]}-1"], capture_directions=Piece.Movements[f"Diagonal-{direction[1]}"], single_step_capture=True, single_step_movement=True),
+        }
 
         def generate_moves(piece):
             '''
@@ -117,7 +116,7 @@ class Chezz:
             """
 
             moves = []
-            cannon_piece = next(piece for piece in pieces if piece.name == 'C')
+            cannon_piece = pieces['C']
             name, move_directions = cannon_piece.name, cannon_piece.move_directions
             
             for position in self.board.get_piece_positions(self.board.color + name):
@@ -171,7 +170,7 @@ class Chezz:
             """
 
             moves = []
-            flinger_piece = next(piece for piece in pieces if piece.name == 'F')
+            flinger_piece = pieces['F']
             name, move_directions = flinger_piece.name, flinger_piece.move_directions
             
             for position in self.board.get_piece_positions(self.board.color + name):
@@ -214,7 +213,7 @@ class Chezz:
             return moves
 
         # Return a concatenated list of all the moves for each piece on the board
-        return list(chain.from_iterable(generate_moves(piece) for piece in pieces if piece.name not in ['C', 'F'])) + cannon_moves() + flinger_moves()
+        return generate_moves(pieces['Q']) + flinger_moves() + generate_moves(pieces['Z']) + cannon_moves() + generate_moves(pieces['R']) + generate_moves(pieces['K']) + generate_moves(pieces['N']) + generate_moves(pieces['B']) + generate_moves(pieces['P'])
     
     def is_checkmate(self):
         """
