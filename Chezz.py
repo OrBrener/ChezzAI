@@ -1,5 +1,6 @@
 from Board import *
 from itertools import chain
+import random
 
 class Chezz:
     def __init__(self, board=None, time_used=0, time_allowed=60000, num_moves=0):
@@ -231,3 +232,54 @@ class Chezz:
             return True
 
         return False
+    
+    def heuristic(self, board):
+        """
+        A heuristic function that evaluates the current board state.
+        The heuristic function is used to determine the value of a board state.
+        Returns:
+            int: The heuristic value of the board state.
+        """
+        return random.randint(1, 1000)
+    
+    def max_score( self, currentState, depth, alpha=-10000000, beta=10000000):
+        if depth == 0:
+            return currentState.heuristic( currentState.board )
+        
+        bestScore = -10000000
+
+        successors = currentState.valid_moves()
+        bestMove = None
+        for move in successors:
+            next_state = Chezz(currentState.board.generate_board_after_move( move ))
+            score = currentState.min_score( next_state, depth-1, alpha, beta )
+            if isinstance(score, tuple):
+                score = score[0]
+            if score > bestScore:
+                bestScore = score
+                bestMove = move
+            if score > beta:
+                return bestScore
+            alpha = max( alpha, score )
+        return bestScore, bestMove
+    
+    def min_score( self, currentState, depth, alpha, beta ):
+        if depth == 0:
+            return currentState.heuristic( currentState.board )
+        
+        worstScore = 10000000
+
+        successors = currentState.valid_moves()
+        worstMove = None
+        for move in successors:
+            next_state = Chezz(currentState.board.generate_board_after_move( move ))
+            score = currentState.max_score( next_state, depth-1, alpha, beta )
+            if isinstance(score, tuple):
+                score = score[0]
+            if score < worstScore:
+                worstScore = score
+                worstMove = move
+            if score > alpha:
+                return worstScore
+            beta = min( beta, score )
+        return worstScore, worstMove
