@@ -1,6 +1,4 @@
 from Board import *
-from itertools import chain
-import random
 
 class Chezz:
     def __init__(self, board=None, time_used=0, time_allowed=60000, num_moves=0):
@@ -239,7 +237,78 @@ class Chezz:
         Returns:
             int: The heuristic value of the board state.
         """
-        return random.randint(1, 1000)
+
+        if self.is_checkmate():
+            return -1000000
+        
+        value = 0
+        center_control = 0
+        pawn_structure = 0
+        num_zombies = 0
+        zombie_contagion = 0
+
+        def add_piece_value(piece_type):
+            piece_values = {
+                'P': 1, 'N': 4, 'B': 3, 'R': 5, 'Q': 20, 'K': 1000, 'Z': 30, 'C': 10, 'F': 15
+            }
+            piece_value = piece_values[piece_type]
+            
+            if piece_color == board.color:
+                return piece_value
+            else:
+                return -piece_value
+        
+        center_squares = [(3, 3), (3, 4), (4, 3), (4, 4)]
+        king_positions = {'w': None, 'b': None}
+        for (x, y), piece in board.board.items():
+            if piece.strip() != '-':
+                piece_type = piece.strip()[1]
+                piece_color = piece.strip()[0]
+
+                value += add_piece_value(piece_type)
+                
+                # Control of the center
+                if (x, y) in center_squares:
+                    if piece_color == board.color:
+                        center_control += 1
+                    else:
+                        center_control -= 1
+
+                # King safety: Track the king's position
+                if piece_type == 'K':
+                    king_positions[piece_color] = (x, y)
+
+                # Pawn structure: Penalize doubled, isolated, and backward pawns
+                if piece_type == 'P':
+                    if piece_color == board.color:
+                        if y > 0 and board.get_piece_at_position(board.convert_coordinates_to_position((x, y-1))).strip() == board.color+'P':
+                            pawn_structure -= 0.5  # Doubled pawn
+                        if y < 7 and board.get_piece_at_position(board.convert_coordinates_to_position((x, y+1))).strip() == board.color+'P':
+                            pawn_structure -= 0.5  # Doubled pawn
+                        if x > 0 and board.get_piece_at_position(board.convert_coordinates_to_position((x-1, y))).strip() != board.color+'P' and board.get_piece_at_position(board.convert_coordinates_to_position((x-1, y))).strip() != '-':
+                            pawn_structure -= 0.5  # Isolated pawn
+                        if x < 7 and board.get_piece_at_position(board.convert_coordinates_to_position((x+1, y))).strip() != board.color+'P' and board.get_piece_at_position(board.convert_coordinates_to_position((x+1, y))).strip() != '-':
+                            pawn_structure -= 0.5  # Isolated pawn
+
+
+                # Zombie contagion: Evaluate potential for zombies to convert enemy pieces
+                if piece_type == 'Z':
+                    if piece_color == board.color:
+                        # Count the number of zombies on the board
+                        num_zombies += 1
+                    for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                        new_x, new_y = x + dx, y + dy
+                        if 0 <= new_x < 8 and 0 <= new_y < 8:
+                            adjacent_piece = board.get_piece_at_position(board.convert_coordinates_to_position((new_x, new_y))).strip()
+                            if adjacent_piece != '-' and adjacent_piece[0] != piece_color and adjacent_piece[1] != 'K' and adjacent_piece[1] != 'Z':
+                                if piece_color == board.color:
+                                    zombie_contagion += 1
+                                else:
+                                    zombie_contagion -= 1
+
+        # # Combine all factors into the final heuristic value
+        heuristic_value = value + (num_zombies*10) + (0.5 * center_control) + (0.2 * pawn_structure) + (2 * zombie_contagion)
+        return heuristic_value
     
     def max_score( self, currentState, depth, alpha=-10000000, beta=10000000):
         if depth == 0:
