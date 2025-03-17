@@ -40,10 +40,14 @@ def main(func_name, *func_args):
 
         def run_n_times_with_given_depth(n, depth):
             game = Chezz()
+            print(game)
             for _ in range(n):
                 print(game.board)
-                best_move = game.max_score(game, depth)
-                print(best_move)
+                if depth % 2 == 0:
+                    best_move = game.max_score(game, depth)
+                else:
+                    best_move = game.min_score(game, depth)
+                print("BEST MOVE", best_move)
                 if isinstance(best_move, tuple):
                     game.board = game.board.generate_board_after_move(best_move[1])
 

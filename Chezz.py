@@ -310,7 +310,7 @@ class Chezz:
         heuristic_value = value + (num_zombies*10) + (0.5 * center_control) + (0.2 * pawn_structure) + (2 * zombie_contagion)
         return heuristic_value
     
-    def max_score( self, currentState, depth, alpha=-10000000, beta=10000000):
+    def max_score( self, currentState, depth ):
         if depth == 0:
             return currentState.heuristic( currentState.board )
         
@@ -320,18 +320,15 @@ class Chezz:
         bestMove = None
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))
-            score = currentState.min_score( next_state, depth-1, alpha, beta )
+            score = currentState.min_score( next_state, depth-1 )
             if isinstance(score, tuple):
                 score = score[0]
             if score > bestScore:
                 bestScore = score
                 bestMove = move
-            if score > beta:
-                return bestScore
-            alpha = max( alpha, score )
         return bestScore, bestMove
     
-    def min_score( self, currentState, depth, alpha, beta ):
+    def min_score( self, currentState, depth ):
         if depth == 0:
             return currentState.heuristic( currentState.board )
         
@@ -341,13 +338,10 @@ class Chezz:
         worstMove = None
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))
-            score = currentState.max_score( next_state, depth-1, alpha, beta )
+            score = currentState.max_score( next_state, depth-1 )
             if isinstance(score, tuple):
                 score = score[0]
             if score < worstScore:
                 worstScore = score
                 worstMove = move
-            if score > alpha:
-                return worstScore
-            beta = min( beta, score )
         return worstScore, worstMove
