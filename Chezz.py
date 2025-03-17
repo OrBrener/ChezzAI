@@ -213,18 +213,20 @@ class Chezz:
         # Return a concatenated list of all the moves for each piece on the board
         return generate_moves(pieces['Q']) + flinger_moves() + generate_moves(pieces['Z']) + cannon_moves() + generate_moves(pieces['R']) + generate_moves(pieces['K']) + generate_moves(pieces['N']) + generate_moves(pieces['B']) + generate_moves(pieces['P'])
     
-    def is_checkmate(self):
+    def is_checkmate(self, opponent=False):
         """
-        Determines if the current player is in a checkmate position.
-        Checkmate occurs when the opposing King is captured.
+        Determines if the current player (or opponent) is in a checkmate position.
+        Checkmate occurs when the King is captured.
         Returns:
-            bool: True if the current player is in checkmate, False otherwise.
+            bool: True if the player is in checkmate, False otherwise.
         """
-        # Get the position of the opposing King
         opposing_king = 'wK' if self.board.color == 'b' else 'bK'
-        king_position = self.board.get_piece_positions(opposing_king)
+        if opponent:
+            king_position = self.board.get_piece_positions(opposing_king)
+        else:
+            king_position = self.board.get_piece_positions(self.board.color + 'K')
 
-        # If the opposing King is not on the board, it's checkmate
+        # If the King is not on the board, it's checkmate
         if not king_position:
             return True
 
@@ -240,6 +242,8 @@ class Chezz:
 
         if self.is_checkmate():
             return -1000000
+        if self.is_checkmate(opponent=True):
+            return 1000000
         
         value = 0
         center_control = 0
