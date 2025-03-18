@@ -19,13 +19,16 @@ def main(func_name, *func_args):
     else:
         def run_until_end_of_time_with_depth_n(depth):
             game = Chezz()
-            total_time = game.time_allowed
+            total_time = game.time_allowed * 2
             iteration = 1
             all_scores = []
             while total_time > 0:
                 print(game.board)
                 start_time = time.time()
-                best_move = game.max_score(game, depth)
+                if depth % 2 == 0:
+                    best_move = game.max_score(game, depth)
+                else:
+                    best_move = game.min_score(game, depth)
                 end_time = time.time()
                 elapsed_time = (end_time - start_time)
                 total_time = total_time - (elapsed_time * 1000)
@@ -43,6 +46,9 @@ def main(func_name, *func_args):
             print(game)
             for _ in range(n):
                 print(game.board)
+                if game.is_checkmate():
+                    print("Checkmate")
+                    return
                 if depth % 2 == 0:
                     best_move = game.max_score(game, depth)
                 else:
@@ -56,12 +62,12 @@ def main(func_name, *func_args):
             depth = 3
             if game.time_allowed < 10000:
                 depth = 1
-            best_move = game.max_score(game, depth)[1]
+            best_move = game.min_score(game, depth)[1]
             game.board.generate_board_files([best_move], 'stdout')
 
         def test_heuristic():
             game = Chezz()
-            print(game.heuristic(game.board))
+            print(game.board, game.heuristic(game.board))
         
         # Get the function by name and call it with additional arguments
         func = locals().get(func_name)
@@ -72,7 +78,15 @@ def main(func_name, *func_args):
 
 if __name__ == "__main__":
     # main("run_until_end_of_time_with_depth_n", 3)
-    # main("run_n_times_with_given_depth", 1, 3)
+    # main("run_n_times_with_given_depth", 10, 3)
     # main("test_heuristic")
     
     main("get_best_move")
+
+    # main("test_heuristic")
+
+    # file_name = "test"
+    # file_path = f"boards/{file_name}.txt"
+    # turn = sys.stdin.readline().strip()
+    # board_string = sys.stdin.read()
+    # Board.board_string_to_file(turn, board_string, file_path)
