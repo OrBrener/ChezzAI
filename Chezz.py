@@ -245,15 +245,33 @@ class Chezz:
         if self.is_checkmate(opponent=True):
             return 1000000
         
+        # Directionality for Peons
+        direction = ["Up","Forward"] if self.board.color == 'w' else ["Down","Backward"]  # White moves up, Black moves down
+
+        # Define pieces with their name, move_directions, capture_directions, single_step_movement, single_step_capture
+        pieces = {
+            'Q': Piece('Q', Piece.Movements["8-Square"]),
+            'F': Piece('F', Piece.Movements["8-Square"], capture_directions=[], single_step_movement=True),
+            'Z': Piece('Z', Piece.Movements["Straight-Files"], single_step_capture=True, single_step_movement=True),
+            'C': Piece('C', Piece.Movements["Straight-Files"], capture_directions=[], single_step_movement=True),
+            'R': Piece('R', Piece.Movements["Straight-Files"]),           
+            'K': Piece('K', Piece.Movements["8-Square"], single_step_capture=True, single_step_movement=True),
+            'N': Piece('N', Piece.Movements["L-Shape"], single_step_capture=True, single_step_movement=True),
+            'B': Piece('B', Piece.Movements["Diagonals"]),
+            'P': Piece('P', Piece.Movements[f"{direction[0]}-1"], capture_directions=Piece.Movements[f"Diagonal-{direction[1]}"], single_step_capture=True, single_step_movement=True),
+        }
+        
         value = 0
         center_control = 0
-        pawn_structure = 0
+        king_safety = 0
+        pawn_promotion = 0
         num_zombies = 0
         zombie_contagion = 0
+        unmotivated_pieces = 0
 
         def add_piece_value(piece_type):
             piece_values = {
-                'P': 1, 'N': 4, 'B': 3, 'R': 5, 'Q': 20, 'K': 1000, 'Z': 30, 'C': 10, 'F': 15
+                'P': 1, 'N': 4, 'B': 3, 'R': 5, 'Q': 20, 'K': 1000, 'Z': 10, 'C': 10, 'F': 15
             }
             piece_value = piece_values[piece_type]
             
@@ -261,9 +279,39 @@ class Chezz:
                 return piece_value
             else:
                 return -piece_value
-        
-        center_squares = [(3, 3), (3, 4), (4, 3), (4, 4)]
-        king_positions = {'w': None, 'b': None}
+
+
+        # Count the number of pieces not in their original positions
+        original_positions = {
+            'wP': ['a2', 'b2', 'c2', 'd2', 'f2', 'g2', 'h2'],
+            'bP': ['a7', 'b7', 'c7', 'd7', 'f7', 'g7', 'h7'],
+            'wR': ['h1'],
+            'bR': ['h8'],
+            'wN': ['b1', 'g1'],
+            'bN': ['b8', 'g8'],
+            'wB': ['f1'],
+            'bB': ['f8'],
+            'wQ': ['d1'],
+            'bQ': ['d8'],
+            'wK': ['e1'],
+            'bK': ['e8'],
+            'wZ': ['e2'],
+            'bZ': ['e7'],
+            'wC': ['c1'],
+            'bC': ['c8'],
+            'wF': ['a1'],
+            'bF': ['a8']
+        }
+
+        for piece_key in original_positions:
+            piece_color = piece_key[0]
+            for position in board.get_piece_positions(piece_key):
+                if piece_key in original_positions and position not in original_positions[piece_key]:
+                    if piece_color == board.color:
+                        unmotivated_pieces += 1  # Reward for moving pieces from their original positions
+                    else:
+                        unmotivated_pieces -= 1  # Penalize opponent's pieces moving from their original positions
+
         for (x, y), piece in board.board.items():
             if piece.strip() != '-':
                 piece_type = piece.strip()[1]
@@ -272,46 +320,62 @@ class Chezz:
                 value += add_piece_value(piece_type)
                 
                 # Control of the center
+                center_squares = [(2, 4), (3, 4), (4, 4), (2, 3), (3, 3), (4, 3)]
                 if (x, y) in center_squares:
                     if piece_color == board.color:
                         center_control += 1
+                        if piece_type == 'Z':
+                            center_control += 9
                     else:
                         center_control -= 1
+                        if piece_type == 'Z':
+                            center_control -= 9
 
-                # King safety: Track the king's position
+                # King safety: Check how many friendly pieces are protecting the king
                 if piece_type == 'K':
-                    king_positions[piece_color] = (x, y)
+                    for dx, dy in pieces['K'].move_directions:
+                        new_x, new_y = x + dx, y + dy
+                        adjacent_pos = board.convert_coordinates_to_position((new_x, new_y))
+                        if adjacent_pos:  # Ensure move is within board boundaries
+                            piece_at_adjacent = board.get_piece_at_position(adjacent_pos).strip()
+                            if piece_at_adjacent != '-' and piece_at_adjacent[0] == piece_color:
+                                if piece_color == board.color:
+                                    king_safety += 1
+                                else:
+                                    king_safety -= 1
 
-                # Pawn structure: Penalize doubled, isolated, and backward pawns
+                # Check if the pawn is getting closer to the final rank for promotion
                 if piece_type == 'P':
-                    if piece_color == board.color:
-                        if y > 0 and board.get_piece_at_position(board.convert_coordinates_to_position((x, y-1))).strip() == board.color+'P':
-                            pawn_structure -= 0.5  # Doubled pawn
-                        if y < 7 and board.get_piece_at_position(board.convert_coordinates_to_position((x, y+1))).strip() == board.color+'P':
-                            pawn_structure -= 0.5  # Doubled pawn
-                        if x > 0 and board.get_piece_at_position(board.convert_coordinates_to_position((x-1, y))).strip() != board.color+'P' and board.get_piece_at_position(board.convert_coordinates_to_position((x-1, y))).strip() != '-':
-                            pawn_structure -= 0.5  # Isolated pawn
-                        if x < 7 and board.get_piece_at_position(board.convert_coordinates_to_position((x+1, y))).strip() != board.color+'P' and board.get_piece_at_position(board.convert_coordinates_to_position((x+1, y))).strip() != '-':
-                            pawn_structure -= 0.5  # Isolated pawn
+                    if (piece_color == 'w' and y == 6) or (piece_color == 'b' and y == 1):
+                        if piece_color == board.color:
+                            pawn_promotion += 1  # Reward for getting closer to promotion
+                        else:
+                            pawn_promotion -= 1  # Penalize opponent's pawn getting closer to promotion
 
 
                 # Zombie contagion: Evaluate potential for zombies to convert enemy pieces
                 if piece_type == 'Z':
+                    # Count the number of zombies on the board
                     if piece_color == board.color:
-                        # Count the number of zombies on the board
                         num_zombies += 1
-                    for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                    else: 
+                        num_zombies -= 1
+                    for dx, dy in pieces['Z'].move_directions:
                         new_x, new_y = x + dx, y + dy
-                        if 0 <= new_x < 8 and 0 <= new_y < 8:
-                            adjacent_piece = board.get_piece_at_position(board.convert_coordinates_to_position((new_x, new_y))).strip()
-                            if adjacent_piece != '-' and adjacent_piece[0] != piece_color and adjacent_piece[1] != 'K' and adjacent_piece[1] != 'Z':
-                                if piece_color == board.color:
-                                    zombie_contagion += 1
-                                else:
-                                    zombie_contagion -= 1
-
+                        adjacent_pos = board.convert_coordinates_to_position((new_x, new_y))
+                        if adjacent_pos: # Ensure move is within board boundaries
+                            piece_at_adjacent = board.get_piece_at_position(adjacent_pos).strip()
+                            if piece_at_adjacent != '-': # Not an empty space
+                                # Contagion does not effect your own pieces or Kings or other Zombies
+                                if piece_at_adjacent[0] != piece_color and piece_at_adjacent[1] not in ['K','Z']:
+                                    if piece_color == board.color:
+                                        zombie_contagion += 1
+                                    else:
+                                        zombie_contagion -= 1
+        # print(f"{board.color} Value: {value}, King Safety: {5* king_safety}, Num Zombies: {num_zombies}, Center Control: {2 * center_control}, Pawn Promotion: {0.2* pawn_promotion}, Zombie Contagion: {2* zombie_contagion}")
+        
         # # Combine all factors into the final heuristic value
-        heuristic_value = value + (num_zombies*10) + (0.5 * center_control) + (0.2 * pawn_structure) + (2 * zombie_contagion)
+        heuristic_value =  value + (10 * unmotivated_pieces) + (5 * king_safety) + num_zombies + (2 * center_control) + (0.2 * pawn_promotion) + (2 * zombie_contagion)
         return heuristic_value
     
     def max_score( self, currentState, depth ):
