@@ -53,7 +53,10 @@ def main(func_name, *func_args):
 
         def get_best_move():
             game = Chezz()
-            best_move = game.max_score(game, 3)[1]
+            depth = 3
+            if game.time_allowed < 10000:
+                depth = 1
+            best_move = game.max_score(game, depth)[1]
             game.board.generate_board_files([best_move], 'stdout')
 
         def test_heuristic():
