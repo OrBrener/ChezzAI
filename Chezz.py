@@ -380,7 +380,7 @@ class Chezz:
     
     def max_score( self, currentState, depth ):
         if depth == 0:
-            return currentState.heuristic( currentState.board )
+            return currentState.heuristic( currentState.board ), None
         
         bestScore = -10000000
 
@@ -389,16 +389,14 @@ class Chezz:
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))
             score = currentState.min_score( next_state, depth-1 )
-            if isinstance(score, tuple):
-                score = score[0]
-            if score > bestScore:
-                bestScore = score
+            if score[0] > bestScore:
+                bestScore = score[0]
                 bestMove = move
         return bestScore, bestMove
     
     def min_score( self, currentState, depth ):
         if depth == 0:
-            return currentState.heuristic( currentState.board )
+            return currentState.heuristic( currentState.board ), None
         
         worstScore = 10000000
 
@@ -407,9 +405,7 @@ class Chezz:
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))
             score = currentState.max_score( next_state, depth-1 )
-            if isinstance(score, tuple):
-                score = score[0]
-            if score < worstScore:
-                worstScore = score
+            if score[0] < worstScore:
+                worstScore = score[0]
                 worstMove = move
         return worstScore, worstMove
