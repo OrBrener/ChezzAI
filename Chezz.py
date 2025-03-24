@@ -34,7 +34,7 @@ class Chezz:
         
         return return_str
     
-    def valid_moves(self):
+    def valid_moves(self, get_first = None):
 
         # Directionality for Peons
         direction = ["Up","Forward"] if self.board.color == 'w' else ["Down","Backward"]  # White moves up, Black moves down
@@ -77,10 +77,20 @@ class Chezz:
                             if (dx, dy) in piece.move_directions:
                                 # Format: (<piece to be moved>, <current piece position>, <new position after move>)
                                 moves.append((self.board.color + piece.name, position, new_pos))
+                                
+                                # If I only want to return the first move
+                                if get_first:
+                                    return moves
+                                
                         else: # There is a piece at the new position  
                             # Opponent's piece for capture 
                             if (dx, dy) in piece.capture_directions and piece_at_new_pos[0] != self.board.color:
                                 moves.append((self.board.color + piece.name, position, new_pos))  # Capture
+                                
+                                # If I only want to return the first move
+                                if get_first:
+                                    return moves
+                                
                             break # After capture, piece cannot move any further in that direction
                         
                         # Stop if it's a capture or single-step piece (like a King)
@@ -209,7 +219,16 @@ class Chezz:
                                 new_y += dy
                                 new_pos = self.board.convert_coordinates_to_position((new_x, new_y))
             return moves
-
+        
+        # If get_first is True, return the first valid move found
+        if get_first:
+            for piece in pieces.values():
+                moves = generate_moves(piece)
+                if moves:
+                    return moves
+            # If no moves found for Q, Z, R, K, N, B, P
+            return flinger_moves() + cannon_moves
+        
         # Return a concatenated list of all the moves for each piece on the board
         return generate_moves(pieces['Q']) + flinger_moves() + generate_moves(pieces['Z']) + cannon_moves() + generate_moves(pieces['R']) + generate_moves(pieces['K']) + generate_moves(pieces['N']) + generate_moves(pieces['B']) + generate_moves(pieces['P'])
     

@@ -57,9 +57,11 @@ def main(func_name, *func_args):
             game = Chezz()
             depth = 2
             if game.time_allowed - game.time_used < 10000:
-                depth = 1
-            best_move = game.max_score(game, depth)[1]
-            game.board.generate_board_files([best_move], 'stdout')
+                first_move = game.valid_moves(True)
+                game.board.generate_board_files(first_move, 'stdout')
+            else:
+                best_move = game.max_score(game, depth)[1]
+                game.board.generate_board_files([best_move], 'stdout')
 
         def test_heuristic():
             game = Chezz()
