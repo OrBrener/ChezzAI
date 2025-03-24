@@ -48,26 +48,23 @@ def main(func_name, *func_args):
                 print(game.board)
                 if game.is_checkmate():
                     print("Checkmate")
-                    return
-                if depth % 2 == 0:
-                    best_move = game.max_score(game, depth)
-                else:
-                    best_move = game.min_score(game, depth)
+                best_move = game.max_score(game, depth)
                 print("BEST MOVE", best_move)
                 if isinstance(best_move, tuple):
                     game.board = game.board.generate_board_after_move(best_move[1])
 
         def get_best_move():
             game = Chezz()
-            depth = 3
-            if game.time_allowed < 10000:
+            depth = 2
+            if game.time_allowed - game.time_used < 10000:
                 depth = 1
-            best_move = game.min_score(game, depth)[1]
+            best_move = game.max_score(game, depth)[1]
             game.board.generate_board_files([best_move], 'stdout')
 
         def test_heuristic():
             game = Chezz()
             print(game.board, game.heuristic(game.board))
+            print(game.max_score(game, 2)[1])
         
         # Get the function by name and call it with additional arguments
         func = locals().get(func_name)
