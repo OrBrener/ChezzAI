@@ -240,9 +240,10 @@ class Chezz:
             int: The heuristic value of the board state.
         """
 
-        if self.is_checkmate():
+        # Check white or black checkmate
+        if not board.get_piece_positions('wK'):
             return -1000000
-        if self.is_checkmate(opponent=True):
+        if not board.get_piece_positions('bK'):
             return 1000000
         
         # Directionality for Peons
@@ -261,25 +262,18 @@ class Chezz:
             'P': Piece('P', Piece.Movements[f"{direction[0]}-1"], capture_directions=Piece.Movements[f"Diagonal-{direction[1]}"], single_step_capture=True, single_step_movement=True),
         }
         
-        value = 0
-        center_control = 0
-        king_safety = 0
-        pawn_promotion = 0
-        num_zombies = 0
-        zombie_contagion = 0
-        unmotivated_pieces = 0
+        piece_value = [0,0]
+        center_control = [0,0]
+        king_safety = [0,0]
+        pawn_promotion = [0,0]
+        num_zombies = [0,0]
+        zombie_contagion = [0,0]
+        unmotivated_pieces = [0,0]
+        queen_dist_king = [0,0]
 
-        def add_piece_value(piece_type):
-            piece_values = {
-                'P': 1, 'N': 4, 'B': 3, 'R': 5, 'Q': 20, 'K': 1000, 'Z': 10, 'C': 10, 'F': 15
-            }
-            piece_value = piece_values[piece_type]
-            
-            if piece_color == board.color:
-                return piece_value
-            else:
-                return -piece_value
-
+        piece_values = {
+            'P': 1, 'N': 4, 'B': 3, 'R': 5, 'Q': 20, 'K': 1000, 'Z': 10, 'C': 10, 'F': 15
+        }
 
         # Count the number of pieces not in their original positions
         original_positions = {
@@ -307,29 +301,33 @@ class Chezz:
             piece_color = piece_key[0]
             for position in board.get_piece_positions(piece_key):
                 if piece_key in original_positions and position not in original_positions[piece_key]:
-                    if piece_color == board.color:
-                        unmotivated_pieces += 1  # Reward for moving pieces from their original positions
+                    if piece_color == 'w':
+                        unmotivated_pieces[0] += 1  # Reward for moving pieces from their original positions
                     else:
-                        unmotivated_pieces -= 1  # Penalize opponent's pieces moving from their original positions
+                        unmotivated_pieces[1] += 1  # Penalize opponent's pieces moving from their original positions
 
         for (x, y), piece in board.board.items():
             if piece.strip() != '-':
                 piece_type = piece.strip()[1]
                 piece_color = piece.strip()[0]
 
-                value += add_piece_value(piece_type)
+                if piece_color == 'w':
+                    piece_value[0] += piece_values[piece_type]
+                else:
+                    piece_value[1] += piece_values[piece_type]
+
                 
                 # Control of the center
                 center_squares = [(2, 4), (3, 4), (4, 4), (2, 3), (3, 3), (4, 3)]
                 if (x, y) in center_squares:
-                    if piece_color == board.color:
-                        center_control += 1
+                    if piece_color == 'w':
+                        center_control[0] += 1
                         if piece_type == 'Z':
-                            center_control += 9
+                            center_control[0] += 9
                     else:
-                        center_control -= 1
+                        center_control[1] += 1
                         if piece_type == 'Z':
-                            center_control -= 9
+                            center_control[1] += 9
 
                 # King safety: Check how many friendly pieces are protecting the king
                 if piece_type == 'K':
@@ -339,27 +337,46 @@ class Chezz:
                         if adjacent_pos:  # Ensure move is within board boundaries
                             piece_at_adjacent = board.get_piece_at_position(adjacent_pos).strip()
                             if piece_at_adjacent != '-' and piece_at_adjacent[0] == piece_color:
-                                if piece_color == board.color:
-                                    king_safety += 1
+                                if piece_color == 'w':
+                                    king_safety[0] += 1
                                 else:
-                                    king_safety -= 1
+                                    king_safety[0] += 1
 
                 # Check if the pawn is getting closer to the final rank for promotion
                 if piece_type == 'P':
-                    if (piece_color == 'w' and y == 6) or (piece_color == 'b' and y == 1):
-                        if piece_color == board.color:
-                            pawn_promotion += 1  # Reward for getting closer to promotion
+                   # Incentivize Peon moving forward: each move forward is worth 1 extra point (a1 = 0, a2 = 1, a3 = 2, etc)
+                    if piece_color == 'w':
+                        pawn_promotion[0] += y  # Reward for white pawn moving forward
+                    else:
+                        pawn_promotion[1] += (7 - y)  # Penalize black pawn moving forward
+
+                # Queen on the same horizontal or diagonal as the King
+                if piece_type == 'Q':
+                    king_positions = board.get_piece_positions('bK') if piece_color == 'w' else board.get_piece_positions('wK')
+                    if king_positions:
+                        king_x, king_y = board.get_coordinates_at_position(king_positions[0])
+                        if x == king_x or y == king_y or abs(x - king_x) == abs(y - king_y):
+                            distance = max(abs(x - king_x), abs(y - king_y))
+                            bonus = 6 - distance  # Closer to the king gets a higher bonus
+                            if piece_color == 'w':
+                                queen_dist_king[0] += 5 + bonus
+                            else:
+                                queen_dist_king[1] += 5 + bonus
+
+                # Incentivize Knight moving to the center
+                if piece_type == 'N':
+                    if (x, y) in center_squares:
+                        if piece_color == 'w':
+                            center_control[0] += 2
                         else:
-                            pawn_promotion -= 1  # Penalize opponent's pawn getting closer to promotion
-
-
+                            center_control[1] += 2
                 # Zombie contagion: Evaluate potential for zombies to convert enemy pieces
                 if piece_type == 'Z':
                     # Count the number of zombies on the board
-                    if piece_color == board.color:
-                        num_zombies += 1
+                    if piece_color == 'w':
+                        num_zombies[0] += 1
                     else: 
-                        num_zombies -= 1
+                        num_zombies[1] += 1
                     for dx, dy in pieces['Z'].move_directions:
                         new_x, new_y = x + dx, y + dy
                         adjacent_pos = board.convert_coordinates_to_position((new_x, new_y))
@@ -368,16 +385,30 @@ class Chezz:
                             if piece_at_adjacent != '-': # Not an empty space
                                 # Contagion does not effect your own pieces or Kings or other Zombies
                                 if piece_at_adjacent[0] != piece_color and piece_at_adjacent[1] not in ['K','Z']:
-                                    if piece_color == board.color:
-                                        zombie_contagion += 1
+                                    if piece_color == 'w':
+                                        zombie_contagion[0] += 1
                                     else:
-                                        zombie_contagion -= 1
-        # print(f"{board.color} Value: {value}, King Safety: {5* king_safety}, Num Zombies: {num_zombies}, Center Control: {2 * center_control}, Pawn Promotion: {0.2* pawn_promotion}, Zombie Contagion: {2* zombie_contagion}")
+                                        zombie_contagion[1] += 1
+
+                # TODO: no need to capture a piece with a zombie since it will infect the piece anyways unless it is an opponents piece or a king
         
+                '''
+                # TODO: better heuristic is to incentivize certain moves for pieces;
+                # ex: Peon moving forward: each move forward is worth 1 extra point (a1 = 0, a2 = 1, a3 = 2, etc)
+                # ex: Knight moving to the center: each move to the center is worth 2 extra points
+                # ex: Queen on the same horizontal or diagonal as the King: 5 extra points 
+                # (maybe the closer it is to the king it gets a bonus +1 (6 squares away), +2 (5 squares away) etc. ) 
+                '''      
+                
         # # Combine all factors into the final heuristic value
-        heuristic_value =  value + (10 * unmotivated_pieces) + (5 * king_safety) + num_zombies + (2 * center_control) + (0.2 * pawn_promotion) + (2 * zombie_contagion)
-        return heuristic_value
-    
+        heuristic_value =  (10* (piece_value[0] - piece_value[1])) + ((unmotivated_pieces[0] - unmotivated_pieces[1]))  + ((center_control[0] - center_control[1])) + \
+        ((king_safety[0] - king_safety[1])) + ((pawn_promotion[0] - pawn_promotion[1])) + ((queen_dist_king[0] - queen_dist_king[1])) + ((num_zombies[0] - num_zombies[1])) + \
+        ((zombie_contagion[0] - zombie_contagion[1]))
+        # TODO: make the heuristic the same value regardless of the color (positive for white advantage, negative for black advantage)
+        if board.color == 'b':
+            return -heuristic_value
+        else:
+            return heuristic_value    
     def max_score( self, currentState, depth ):
         if depth == 0:
             return currentState.heuristic( currentState.board ), None
