@@ -1,0 +1,22 @@
+Tournament: Evaluation00
+
+
+Knightmare a.k.a. obrener
+
+While playing against Stefan's 'legal' opponents, you scored 0/6.
+This earned you 0 FIDEDMV points.
+
+In the games that you lost to the the 'legal' opponents, you were able to `hold out' for
+10.200000000000001 turns.
+This earned you 10.200000000000001 FIDEDMV points.
+
+When playing against other students, you won 40 matches.
+This earned you 640.0 FIDEDMV points.
+
+Your total FIDEDMV rating is 650.
+
+This awards you the rank of Novice
+and a grade of 6.0/10.0.
+
+Your previous grade was 0.0.
+Updading CourseLink with new grade.
