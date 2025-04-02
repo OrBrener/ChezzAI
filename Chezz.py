@@ -261,9 +261,9 @@ class Chezz:
 
         # Check white or black checkmate
         if not board.get_piece_positions('wK'):
-            return -1000000
+            return -10000000
         if not board.get_piece_positions('bK'):
-            return 1000000
+            return 10000000
         
         # Directionality for Peons
         direction = ["Up","Forward"] if self.board.color == 'w' else ["Down","Backward"]  # White moves up, Black moves down
@@ -427,8 +427,9 @@ class Chezz:
         if board.color == 'b':
             return -heuristic_value
         else:
-            return heuristic_value    
-    def max_score( self, currentState, depth ):
+            return heuristic_value
+            
+    def max_score( self, currentState, depth, alpha=-10000000, beta=10000000):
         if depth == 0:
             return currentState.heuristic( currentState.board ), None
         
@@ -438,13 +439,19 @@ class Chezz:
         bestMove = None
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))
-            score = currentState.min_score( next_state, depth-1 )
-            if score[0] > bestScore:
-                bestScore = score[0]
+            score = currentState.min_score( next_state, depth-1, alpha, beta )
+            if isinstance(score, tuple):
+                score = score[0]
+            if score > bestScore:
+                bestScore = score
                 bestMove = move
+            if score > beta:
+                return bestScore
+            alpha = max( alpha, score )
+
         return bestScore, bestMove
     
-    def min_score( self, currentState, depth ):
+    def min_score( self, currentState, depth, alpha, beta ):
         if depth == 0:
             return currentState.heuristic( currentState.board ), None
         
@@ -454,8 +461,13 @@ class Chezz:
         worstMove = None
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))
-            score = currentState.max_score( next_state, depth-1 )
-            if score[0] < worstScore:
-                worstScore = score[0]
+            score = currentState.max_score( next_state, depth-1, alpha, beta )
+            if isinstance(score, tuple):
+                score = score[0]
+            if score < worstScore:
+                worstScore = score
                 worstMove = move
+            if score > alpha:
+                return worstScore
+            beta = min( beta, score )
         return worstScore, worstMove
