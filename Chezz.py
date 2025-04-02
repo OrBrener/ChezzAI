@@ -288,7 +288,9 @@ class Chezz:
         num_zombies = [0,0]
         zombie_contagion = [0,0]
         unmotivated_pieces = [0,0]
-        queen_dist_king = [0,0]
+        dist_king = [0,0]
+        pin = [0,0]
+        fork = [0,0]
 
         piece_values = {
             'P': 1, 'N': 4, 'B': 3, 'R': 5, 'Q': 20, 'K': 1000, 'Z': 10, 'C': 10, 'F': 15
@@ -378,9 +380,93 @@ class Chezz:
                             distance = max(abs(x - king_x), abs(y - king_y))
                             bonus = 6 - distance  # Closer to the king gets a higher bonus
                             if piece_color == 'w':
-                                queen_dist_king[0] += 5 + bonus
+                                dist_king[0] += 5 + bonus
                             else:
-                                queen_dist_king[1] += 5 + bonus
+                                dist_king[1] += 5 + bonus
+
+                # Rook on the same horizontal or vertical as the King
+                if piece_type == 'R':
+                    king_positions = board.get_piece_positions('bK') if piece_color == 'w' else board.get_piece_positions('wK')
+                    if king_positions:
+                        king_x, king_y = board.get_coordinates_at_position(king_positions[0])
+                        if x == king_x or y == king_y:
+                            distance = abs(x - king_x) + abs(y - king_y)
+                            bonus = 6 - distance  # Closer to the king gets a higher bonus
+                            if piece_color == 'w':
+                                dist_king[0] += 5 + bonus
+                            else:
+                                dist_king[1] += 5 + bonus
+
+                # Bishop on the same diagonal as the King
+                if piece_type == 'B':
+                    king_positions = board.get_piece_positions('bK') if piece_color == 'w' else board.get_piece_positions('wK')
+                    if king_positions:
+                        king_x, king_y = board.get_coordinates_at_position(king_positions[0])
+                        if abs(x - king_x) == abs(y - king_y):  # Same diagonal
+                            distance = abs(x - king_x)
+                            bonus = 6 - distance  # Closer to the king gets a higher bonus
+                            if piece_color == 'w':
+                                dist_king[0] += 5 + bonus
+                            else:
+                                dist_king[1] += 5 + bonus
+
+                # Knight on the same L-shape path as the King
+                if piece_type == 'N':
+                    king_positions = board.get_piece_positions('bK') if piece_color == 'w' else board.get_piece_positions('wK')
+                    if king_positions:
+                        king_x, king_y = board.get_coordinates_at_position(king_positions[0])
+                        for dx, dy in Piece.Movements["L-Shape"]:
+                            if x + dx == king_x and y + dy == king_y:
+                                bonus = 6  # Fixed bonus for being in an L-shape path to the King
+                                if piece_color == 'w':
+                                    dist_king[0] += 5 + bonus
+                                else:
+                                    dist_king[1] += 5 + bonus
+
+                # Check for pinning
+                if piece_type in ['R', 'B', 'Q', 'C']:
+                    king_positions = board.get_piece_positions('bK') if piece_color == 'w' else board.get_piece_positions('wK')
+                    if king_positions:
+                        king_x, king_y = board.get_coordinates_at_position(king_positions[0])
+                        dx, dy = king_x - x, king_y - y
+                        if dx == 0 or dy == 0 or abs(dx) == abs(dy):  # Same row, column, or diagonal
+                            step_x, step_y = (dx // abs(dx) if dx != 0 else 0, dy // abs(dy) if dy != 0 else 0)
+                            intermediate_x, intermediate_y = x + step_x, y + step_y
+                            pinned = True
+                            while (intermediate_x, intermediate_y) != (king_x, king_y):
+                                intermediate_pos = board.convert_coordinates_to_position((intermediate_x, intermediate_y))
+                                if intermediate_pos:
+                                    piece_at_intermediate = board.get_piece_at_position(intermediate_pos).strip()
+                                    if piece_at_intermediate != '-':
+                                        pinned = False
+                                        break
+                                intermediate_x += step_x
+                                intermediate_y += step_y
+                            if pinned:
+                                if piece_color == 'w':
+                                    pin[0] += 10  # Reward for pinning opponent's pieces
+                                else:
+                                    pin[1] += 10  # Penalize for being pinned
+
+                # Check for forking
+                if piece_type in ['N', 'Q', 'B', 'P', 'Z', 'C']:
+                    king_positions = board.get_piece_positions('bK') if piece_color == 'w' else board.get_piece_positions('wK')
+                    if king_positions:
+                        king_x, king_y = board.get_coordinates_at_position(king_positions[0])
+                        forked_pieces = 0
+                        move_directions = pieces[piece_type].capture_directions
+                        for dx, dy in move_directions:
+                            new_x, new_y = x + dx, y + dy
+                            fork_pos = board.convert_coordinates_to_position((new_x, new_y))
+                            if fork_pos:
+                                piece_at_fork = board.get_piece_at_position(fork_pos).strip()
+                                if piece_at_fork != '-' and piece_at_fork[0] != piece_color:
+                                    forked_pieces += 1
+                        if forked_pieces >= 2:
+                            if piece_color == 'w':
+                                fork[0] += 15  # Reward for forking multiple valuable pieces
+                            else:
+                                fork[1] += 15  # Penalize for being forked
 
                 # Incentivize Knight moving to the center
                 if piece_type == 'N':
@@ -420,9 +506,10 @@ class Chezz:
                 '''      
                 
         # # Combine all factors into the final heuristic value
-        heuristic_value =  (10* (piece_value[0] - piece_value[1])) + ((unmotivated_pieces[0] - unmotivated_pieces[1]))  + ((center_control[0] - center_control[1])) + \
-        ((king_safety[0] - king_safety[1])) + ((pawn_promotion[0] - pawn_promotion[1])) + ((queen_dist_king[0] - queen_dist_king[1])) + ((num_zombies[0] - num_zombies[1])) + \
-        ((zombie_contagion[0] - zombie_contagion[1]))
+        heuristic_value =  ( 10 * (piece_value[0] - piece_value[1])) + ((unmotivated_pieces[0] - unmotivated_pieces[1]))  + ( 2 * (center_control[0] - center_control[1])) + \
+                                ((king_safety[0] - king_safety[1])) + ((pawn_promotion[0] - pawn_promotion[1])) + ( 5 * (dist_king[0] - dist_king[1])) + \
+                                ( 2 * (pin[0] - pin[1])) + ( 3 * (fork[0] - fork[1]))+ ( 2 * (num_zombies[0] - num_zombies[1])) + \
+                                ( 2 * (zombie_contagion[0] - zombie_contagion[1]))
         # TODO: make the heuristic the same value regardless of the color (positive for white advantage, negative for black advantage)
         if board.color == 'b':
             return -heuristic_value
