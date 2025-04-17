@@ -21,25 +21,42 @@ class Board():
     def __init__(self):
         # Initialize an empty chessboard (8x8 grid)
         self.board = { (i, j): '-\t' for i in range(8) for j in range(8) }
+        # Initialize the board with the starting position of pieces
+        starting_positions = {
+            'a1': 'wF', 'b1': 'wN', 'c1': 'wC', 'd1': 'wQ', 'e1': 'wK', 'f1': 'wB', 'g1': 'wN', 'h1': 'wR',
+            'a2': 'wP', 'b2': 'wP', 'c2': 'wP', 'd2': 'wP', 'e2': 'wZ', 'f2': 'wP', 'g2': 'wP', 'h2': 'wP',
+            'a7': 'bP', 'b7': 'bP', 'c7': 'bP', 'd7': 'bP', 'e7': 'bZ', 'f7': 'bP', 'g7': 'bP', 'h7': 'bP',
+            'a8': 'bF', 'b8': 'bN', 'c8': 'bC', 'd8': 'bQ', 'e8': 'bK', 'f8': 'bB', 'g8': 'bN', 'h8': 'bR',
+        }
+
+        for position, piece in starting_positions.items():
+            self.board[Board.position_map[position]] = piece + '\t'
+
         self.color = 'w'
         self.time_used = 0
         self.time_allowed = 60000
         self.num_moves = 0
     
-    def populate_board(self):
-        # store board info from stdin board file input
+    def populate_board(self, file_path=None):
+        """
+        Populate the board from a board file or stdin input.
+        
+        :param file_path: Optional path to the board file. If not provided, reads from stdin.
+        """
+        if file_path:
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+        else:
+            lines = sys.stdin.readlines()
 
-        # first line
-        self.color, self.time_used, self.time_allowed, self.num_moves = sys.stdin.readline().split()
+        # First line
+        self.color, self.time_used, self.time_allowed, self.num_moves = lines[0].split()
         self.time_used = int(self.time_used)
         self.time_allowed = int(self.time_allowed)
         self.num_moves = int(self.num_moves)
         
-        # Read remaining board input (until closing brackets)
-        lines = sys.stdin.readlines()
-
-        # Process each line in board.txt
-        for line in lines:
+        # Process remaining lines
+        for line in lines[1:]:
             # closing bracket indicates end of board file
             if (line == '}\n'):
                 break
