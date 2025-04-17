@@ -1,12 +1,13 @@
 from Board import *
 
 class Chezz:
-    def __init__(self, board=None, time_used=0, time_allowed=60000, num_moves=0):
-        if board:
+    def __init__(self, board=None, board_file=None, time_used=0, time_allowed=60000, num_moves=0):
+        self.board = Board() # initialize a starting position board
+        if board: # if a board is passed in, use that board
             self.board = board
-        else: 
-            self.board = Board()
-            self.board.populate_board()
+        else: # if no board is passed in, populate the board with the given board file
+            if board_file:
+                self.board.populate_board(board_file)
         self.time_used = self.board.time_used
         self.time_allowed = self.board.time_allowed
         self.num_moves = self.board.num_moves
