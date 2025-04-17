@@ -57,7 +57,7 @@ def main(func_name, *func_args):
             game = Chezz()
             depth = 2
             if game.time_allowed - game.time_used < 10000:
-                first_move = game.valid_moves(True)
+                first_move = game.get_legal_moves(True)
                 game.board.generate_board_files(first_move, 'stdout')
             else:
                 best_move = game.max_score(game, depth)[1]

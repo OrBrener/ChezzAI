@@ -19,7 +19,7 @@ class Chezz:
         
         return_str += "Moves: \n"
         num_moves = 0
-        for move in self.valid_moves():
+        for move in self.get_legal_moves():
             if isinstance(move[2], list):
                 if move[2][0] == "Cannonball":
                     return_str += f"{num_moves+1}\t{move[2][0]} from {move[1]} going {Piece.directions[move[2][1]]}!\n"
@@ -35,7 +35,7 @@ class Chezz:
         
         return return_str
     
-    def valid_moves(self, get_first = None):
+    def get_legal_moves(self, get_first = None):
 
         # Directionality for Peons
         direction = ["Up","Forward"] if self.board.color == 'w' else ["Down","Backward"]  # White moves up, Black moves down
@@ -523,7 +523,7 @@ class Chezz:
         
         bestScore = -10000000
 
-        successors = currentState.valid_moves()
+        successors = currentState.get_legal_moves()
         bestMove = None
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))
@@ -545,7 +545,7 @@ class Chezz:
         
         worstScore = 10000000
 
-        successors = currentState.valid_moves()
+        successors = currentState.get_legal_moves()
         worstMove = None
         for move in successors:
             next_state = Chezz(currentState.board.generate_board_after_move( move ))

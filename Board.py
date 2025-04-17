@@ -220,7 +220,7 @@ class Board():
                 if pattern.match(file):  # Check if the file matches the pattern "board.xxx"
                     os.remove(file)
 
-    def generate_board_files(self, valid_moves, output_mode='file'):
+    def generate_board_files(self, legal_moves, output_mode='file'):
         """
         Generates board files for each valid move and removes old board files.
         This function performs the following steps:
@@ -238,7 +238,7 @@ class Board():
             self.remove_old_board_files()
 
         board_counter = 0
-        for move in valid_moves:
+        for move in legal_moves:
             # TODO: pass in the time used to generate each new move
             new_board = self.generate_board_after_move(move, time_used=0)
             
