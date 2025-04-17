@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ChezzAI Chess Variation</title>
+
+  <!-- Chessboard.js CSS from CDN (no integrity attrs) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css"
+  />
+  <style>
+    #board { width: 400px; margin: 20px auto; }
+  </style>
+</head>
+<body>
+  <h1>ChezzAI Chess Variation</h1>
+  <div id="board"></div>
+
+  <!-- jQuery from CDN -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+  <!-- Chessboard.js JS from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+  <!-- Your board‑init code -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      Chessboard('board', {
+        position: 'start',
+        draggable: true,
+        pieceTheme: '/static/PNG_board_pieces/{piece}.png',
+        onDrop: function(source, target) {
+          const userMove = source + target;
+          // …your AJAX POST to /next_move…
+        }
+      });
+    });
+  </script>
+</body>
+</html>
