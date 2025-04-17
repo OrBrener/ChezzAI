@@ -19,22 +19,87 @@
 
   <!-- jQuery from CDN -->
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <!-- Custom Chessboard.js org: https://github.com/oakmac/chessboardjs/blob/master/lib/chessboard.js  -->
-  <script <script src="/static/js/chessboard-custom.js"></script>
-  </script>
+   <!-- Custom Chessboard.js org: https://github.com/oakmac/chessboardjs/blob/master/lib/chessboard.js  -->
+  <script src="/static/js/chessboard-custom.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      Chessboard('board', {
+    // helper funcs to paint/unpaint squares
+    function removeHighlights() {
+      document.querySelectorAll('#board .square-55d63').forEach(sq => {
+        sq.style.background = '';
+      });
+    }
+  
+    function highlightSquare(sq) {
+      const squareEl = document.querySelector(
+        `#board .square-55d63[data-square='${sq}']`
+      );
+      if (!squareEl) return;
+      // choose any CSS color you like here:
+      squareEl.style.background = 'rgba(255, 255, 0, 0.5)';
+    }
+  
+    let legalMap = {};
+  
+    function fetchLegalMoves() {
+      return $.getJSON('/legal_moves')
+        .then(moveList => {
+          legalMap = {};
+          moveList.forEach(m => {
+            const from = m.slice(0,2), to = m.slice(2,4);
+            legalMap[from] = legalMap[from] || [];
+            legalMap[from].push(to);
+          });
+        });
+    }
+  
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchLegalMoves();
+  
+      const board = Chessboard('board', {
         position: 'start',
         draggable: true,
         pieceTheme: '/static/PNG_board_pieces/{piece}.png',
-        onDrop: function(source, target) {
-          const userMove = source + target;
-          // …your AJAX POST to /next_move…
+  
+        onDragStart: (source, piece) => {
+          // clear any old highlights
+          removeHighlights();
+          // only allow dragging if there *are* moves
+          if (!legalMap[source] || !legalMap[source].length) return false;
+  
+          // highlight each legal destination
+          legalMap[source].forEach(dest => highlightSquare(dest));
+          return true;
+        },
+  
+        onDrop: (source, target) => {
+          // clear highlights immediately
+          removeHighlights();
+  
+          // if illegal, bounce back
+          if (!legalMap[source] || !legalMap[source].includes(target)) {
+            return 'snapback';
+          }
+  
+          // otherwise send move to server...
+          return $.ajax({
+            url: '/next_move',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ move: source + target }),
+          }).done(resp => {
+            board.position(resp.updated_position);
+            fetchLegalMoves();
+          });
+        },
+  
+        onDragEnd: () => {
+          // just in case onDrop didn’t fire (e.g. drag out of board), clear
+          removeHighlights();
         }
       });
     });
   </script>
+  
 </body>
 </html>

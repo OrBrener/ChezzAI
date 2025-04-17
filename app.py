@@ -15,8 +15,7 @@ def beg():
 def legal_moves():
     # Retrieve legal moves from the current game state.
     
-    moves = game.get_legal_moves()
-    print(len(moves))
+    moves = [ str(m) for m in game.get_legal_moves() ]
     return jsonify(moves)
 
 

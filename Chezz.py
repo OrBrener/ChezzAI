@@ -77,7 +77,7 @@ class Chezz:
                         if piece_at_new_pos == '-':  # Empty square → Movement allowed
                             if (dx, dy) in piece.move_directions:
                                 # Format: (<piece to be moved>, <current piece position>, <new position after move>)
-                                moves.append((self.board.color + piece.name, position, new_pos))
+                                moves.append(f"{position}{new_pos}")
                                 
                                 # If I only want to return the first move
                                 if get_first:
@@ -86,7 +86,7 @@ class Chezz:
                         else: # There is a piece at the new position  
                             # Opponent's piece for capture 
                             if (dx, dy) in piece.capture_directions and piece_at_new_pos[0] != self.board.color:
-                                moves.append((self.board.color + piece.name, position, new_pos))  # Capture
+                                moves.append(f"{position}{new_pos}")  # Capture
                                 
                                 # If I only want to return the first move
                                 if get_first:
@@ -141,7 +141,7 @@ class Chezz:
                         piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
                         if piece_at_new_pos == '-':  # Empty square → Movement allowed
                             # Format: (<piece to be moved>, <current piece position>, <new position after move>)
-                            moves.append((self.board.color + name, position, new_pos))
+                            moves.append(f"{position}{new_pos}")
                 
                 # Cannonball
                 for dx, dy in Piece.Movements["Diagonals"]:
@@ -154,7 +154,7 @@ class Chezz:
                         if piece_at_new_pos != '-':  # There is a piece → cannonball allowed
                             # Format: (<piece to be moved>, <current piece position>, ["Cannonball", (dx, dy)]) 
                             # Where (dx, dy) are the coordinates in which the cannonball will be moving
-                            moves.append((self.board.color + name, position, ["Cannonball", (dx,dy)]))
+                            moves.append(f"{position}{new_pos}")
                             break
 
                         # Update the new coordinates and board position in the next direction
@@ -195,7 +195,7 @@ class Chezz:
                         piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
                         if piece_at_new_pos == '-':  # Empty square → Movement allowed
                             # Format: (<piece to be moved>, <current piece position>, <new position after move>)
-                            moves.append((self.board.color + name, position, new_pos))
+                            moves.append((position, new_pos))
                 
                 # Flinging
                 for dx, dy in Piece.Movements["8-Square"]:
@@ -210,10 +210,10 @@ class Chezz:
                             while new_pos: # Ensure move is within board boundaries
                                 piece_at_new_pos = self.board.get_piece_at_position(new_pos).strip()
                                 if piece_at_new_pos == '-': # Flinging a piece to an empty square
-                                    moves.append((flung_piece, flung_piece_pos, ["Flung", new_pos]))
+                                    moves.append((flung_piece_pos, new_pos))
                                 elif piece_at_new_pos[0] != self.board.color: # Flinging a piece onto an opponent's piece, shattering both
                                     if piece_at_new_pos[1] != 'K': # Cannot fling onto an opponent's King
-                                        moves.append((flung_piece, flung_piece_pos, ["Flung-Shattered", new_pos]))
+                                        moves.append((flung_piece_pos, new_pos))
 
                                 # Update the new coordinates and board position in the next direction
                                 new_x += dx
