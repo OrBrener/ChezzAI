@@ -1,3 +1,0 @@
-#!/bin/bash
-chmod +x a4.py
-ln -sf a4.py a4
