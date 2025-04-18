@@ -46,6 +46,14 @@ def next_move():
 def index():
     return send_from_directory('static', 'index.html')
 
+
+@app.route('/reset', methods=['POST'])
+def reset():
+    global game
+    game = Chezz()   # or: game.reset() if you implement a reset() method
+    # send back the fresh position so the UI can sync immediately
+    return jsonify({ 'updated_position': game.board.to_fen() })
+
 if __name__ == '__main__':
     # Debug mode is fine for development; for production use a proper WSGI server.
     app.run(debug=True)

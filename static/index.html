@@ -53,10 +53,16 @@
   }
   
     document.addEventListener('DOMContentLoaded', async () => {
+      // 1) Reset the server‐side game, get the fresh position map
+      const resetResp = await fetch('/reset', { method: 'POST' })
+        .then(r => r.json());
+
+      // 2) Fetch the legal moves for the brand‑new start position
       await fetchLegalMoves();
-  
+
+      // 3) Initialize the board **with that reset position**
       const board = Chessboard('board', {
-        position: 'start',
+        position: resetResp.updated_position,
         draggable: true,
         pieceTheme: '/static/PNG_board_pieces/{piece}.png',
   
