@@ -72,8 +72,8 @@
           return true;
         },
   
-        onDrop: (source, target) => {
-          // clear highlights immediately
+        
+        onDrop: (source, target, piece) => {
           removeHighlights();
   
           // if illegal, bounce back
@@ -82,11 +82,13 @@
           }
   
           // otherwise send move to server...
+          const moveArr = [ piece, source, target ];
+      
           return $.ajax({
             url: '/next_move',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ move: source + target }),
+            data: JSON.stringify({ move: moveArr }),
           }).done(resp => {
             board.position(resp.updated_position);
             fetchLegalMoves();
@@ -94,10 +96,10 @@
         },
   
         onDragEnd: () => {
-          // just in case onDrop didn’t fire (e.g. drag out of board), clear
           removeHighlights();
         }
       });
+      
     });
   </script>
   

@@ -313,3 +313,48 @@ class Board():
         new_board.time_used += time_used
         return new_board
 
+    def to_fen(self) -> str:
+        """
+        Convert self.board into a FEN string.
+        Custom piece codes (F, C, Z) are preserved:
+          - uppercase letter for white pieces
+          - lowercase for black pieces
+        """
+        files = 'abcdefgh'
+        ranks = range(8, 0, -1)    # 8 down to 1
+        fen_ranks = []
+
+        for rank in ranks:
+            empty_count = 0
+            fen_row = ''
+
+            for file in files:
+                coord = Board.position_map[f"{file}{rank}"]
+                cell = self.board.get(coord, '-\t').strip()
+
+                if cell == '-':
+                    # empty square
+                    empty_count += 1
+                else:
+                    # flush any previous empties
+                    if empty_count:
+                        fen_row += str(empty_count)
+                        empty_count = 0
+
+                    color, p = cell[0], cell[1]
+                    # uppercase for white, lowercase for black
+                    fen_row += (p.upper() if color == 'w' else p.lower())
+
+            # if the rank ends with empties, append the count
+            if empty_count:
+                fen_row += str(empty_count)
+
+            fen_ranks.append(fen_row)
+
+        # join ranks, then side to move, no castling, no en passant,
+        # halfmove clock = 0, fullmove number = self.num_moves (default 1)
+        fen = '/'.join(fen_ranks)
+        fen += f" {self.color} - - 0 {max(1, self.num_moves)}"
+        return fen
+
+
