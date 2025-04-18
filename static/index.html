@@ -64,10 +64,13 @@
           // clear any old highlights
           removeHighlights();
           // only allow dragging if there *are* moves
-          if (!legalMap[source] || !legalMap[source].length) return false;
-  
-          // highlight each legal destination
-          legalMap[source].forEach(dest => highlightSquare(dest));
+          const moves = legalMap[source] || [];
+          if (!moves.length) return false;
+        
+        
+        // highlight each legal destination
+        moves.forEach(move => highlightSquare(move.to));
+        
           return true;
         },
         
