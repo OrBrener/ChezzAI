@@ -43,15 +43,14 @@
   
     function fetchLegalMoves() {
       return $.getJSON('/legal_moves')
-        .then(moveList => {
-          legalMap = {};
-          moveList.forEach(m => {
-            const from = m.slice(0,2), to = m.slice(2,4);
-            legalMap[from] = legalMap[from] || [];
-            legalMap[from].push(to);
-          });
+      .then(moveTriples => {
+        legalMap = {};
+        moveTriples.forEach(([piece, from, to]) => {
+          legalMap[from] = legalMap[from] || [];
+          legalMap[from].push({ piece, to });
         });
-    }
+      });
+  }
   
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchLegalMoves();
@@ -71,25 +70,22 @@
           legalMap[source].forEach(dest => highlightSquare(dest));
           return true;
         },
-  
         
-        onDrop: (source, target, piece) => {
+        onDrop: (from, to, piece) => {
           removeHighlights();
-  
-          // if illegal, bounce back
-          if (!legalMap[source] || !legalMap[source].includes(target)) {
-            return 'snapback';
-          }
-  
-          // otherwise send move to server...
-          const moveArr = [ piece, source, target ];
-      
+          const moves = legalMap[from] || [];
+          // find the triple whose to==target and piece matches
+          const legal = moves.find(m => m.to === to && m.piece === piece);
+          if (!legal) return 'snapback';
+        
+          // send the exact triple back:
           return $.ajax({
             url: '/next_move',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ move: moveArr }),
-          }).done(resp => {
+            data: JSON.stringify({ move: [piece, from, to] })
+          })
+          .done(resp => {
             board.position(resp.updated_position);
             fetchLegalMoves();
           });
